@@ -10,6 +10,8 @@ from alembic import context
 current_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(current_dir))
 
+# Import all models to ensure they are registered with Base.metadata
+import app.db.models  # noqa: F401
 from app.core.config import settings
 from app.db.base import Base
 
