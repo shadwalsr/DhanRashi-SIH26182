@@ -289,3 +289,43 @@ class GraphEdgeModel(Base, TimestampMixin):
     evidence_ids: Mapped[list[str] | None] = mapped_column(JSON_TYPE, nullable=True)
 
     investigation: Mapped["Investigation"] = relationship()
+
+
+class AttributionResultModel(Base, TimestampMixin):
+    __tablename__ = "attribution_results"
+    __table_args__ = (
+        UniqueConstraint(
+            "investigation_id",
+            "candidate_vasp_id",
+            "version",
+            name="uq_investigation_candidate_version",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    investigation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investigations.id"), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    candidate_vasp_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    candidate_vasp_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    tier: Mapped[str] = mapped_column(String(50), nullable=False)  # HIGH, MEDIUM, LOW, INSUFFICIENT
+    competing_candidates: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    evidence_gate_passed: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    disposition: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)  # pending, accepted, rejected, needs_review
+    disposition_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    disposition_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    disposition_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    weights_version: Mapped[str] = mapped_column(String(50), default="v1.0.0", nullable=False)
+    registry_snapshot_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    factors_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, nullable=False)
+    caps_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON_TYPE, nullable=False)
+    limitations_json: Mapped[list[str]] = mapped_column(JSON_TYPE, nullable=False)
+    supporting_addresses: Mapped[list[str]] = mapped_column(JSON_TYPE, nullable=False)
+    evidence_references: Mapped[list[str]] = mapped_column(JSON_TYPE, nullable=False)
+
+    investigation: Mapped["Investigation"] = relationship()
+    disposition_user: Mapped[Optional["User"]] = relationship()

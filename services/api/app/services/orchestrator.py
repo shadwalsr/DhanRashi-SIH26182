@@ -183,7 +183,7 @@ class InvestigationOrchestrator:
                     "stats": expansion_result,
                 }
 
-            # 4. ANALYZING (Flow propagation)
+            # 4. ANALYZING (Flow propagation & Attribution)
             await transition_state(self.db, inv, InvestigationState.ANALYZING, user_id=user_id)
             flow_result = await propagate_fund_flows(
                 db=self.db,
@@ -191,6 +191,10 @@ class InvestigationOrchestrator:
                 seed_address=norm_addr,
                 seed_chain=inv.blockchain,
             )
+
+            from app.attribution.engine import AttributionEngine
+            attr_engine = AttributionEngine(self.db)
+            attr_result = await attr_engine.run(inv.id)
 
             # Determine final state: PARTIAL if truncation occurred, else COMPLETED
             if expansion_result["has_truncation"]:
@@ -206,9 +210,11 @@ class InvestigationOrchestrator:
             return {
                 "investigation_id": str(inv.id),
                 "status": inv.status,
+                "run_no": inv.run_no,
                 "data_snapshot_id": inv.data_snapshot_id,
                 "expansion": expansion_result,
                 "flow": flow_result,
+                "attribution": attr_result.model_dump(),
             }
 
         except Exception as exc:

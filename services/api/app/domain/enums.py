@@ -110,3 +110,18 @@ class RegistryStatus(str, Enum):
     DISPUTED = "disputed"
     SUPERSEDED = "superseded"
     RETIRED = "retired"
+
+
+class AttributionTier(str, Enum):
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+    INSUFFICIENT = "INSUFFICIENT"
+
+
+class AttributionDisposition(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    NEEDS_REVIEW = "needs_review"
+

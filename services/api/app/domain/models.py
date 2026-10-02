@@ -360,3 +360,64 @@ class GraphResponse(BaseModel):
     nodes: list[dict[str, Any]]
     edges: list[dict[str, Any]]
 
+
+class AttributionFactor(BaseModel):
+    name: str
+    raw_value: Any = None
+    normalized_score: float
+    weight: float
+    contribution: float
+    applicable: bool = True
+    description: str | None = None
+
+
+class AppliedCap(BaseModel):
+    cap_code: str
+    max_score: float
+    reason: str
+
+
+class CandidateAttribution(BaseModel):
+    vasp_id: str
+    vasp_name: str
+    rank: int
+    raw_score: float
+    final_score: float
+    tier: str
+    competing: bool = False
+    evidence_gate_passed: bool = True
+    factors: list[AttributionFactor] = Field(default_factory=list)
+    caps_applied: list[AppliedCap] = Field(default_factory=list)
+    limitations: list[str] = Field(default_factory=list)
+    supporting_addresses: list[str] = Field(default_factory=list)
+    evidence_references: list[str] = Field(default_factory=list)
+    disposition: str = "pending"
+    disposition_notes: str | None = None
+
+
+class AttributionResponse(BaseModel):
+    investigation_id: UUID
+    version: int = 1
+    top_candidate: CandidateAttribution | None = None
+    competing_candidates: bool = False
+    margin: float | None = None
+    candidates: list[CandidateAttribution] = Field(default_factory=list)
+    evidence_gate_passed: bool = True
+    weights_version: str = "v1.0.0"
+    registry_snapshot_id: str | None = None
+    calculated_at: datetime | None = None
+
+
+class AttributionDispositionRequest(BaseModel):
+    disposition: Literal["accepted", "rejected", "needs_review"]
+    notes: str | None = None
+
+
+class ExplainAttributionResponse(BaseModel):
+    investigation_id: UUID
+    candidate: CandidateAttribution
+    formula_breakdown: str
+    weights_version: str = "v1.0.0"
+    reproducibility_hash: str | None = None
+
+

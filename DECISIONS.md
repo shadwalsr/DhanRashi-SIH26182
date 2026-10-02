@@ -153,3 +153,48 @@
 - **Snapshot Hashing (G5, FR-INV-07):** Computes canonical SHA-256 hash (`SNAP-...`) from chain, address, and transaction count for deterministic reruns.
 - **User Cancellation:** `POST /{investigation_id}/cancel` transitions active runs to `FAILED` with audit trail.
 
+
+
+---
+
+## 6. Attribution Engine & Confidence Scoring (Phase 5)
+
+### 6.1 Multi-Feature Scoring Model & Weights (PRD §10.3, FR-ATT-01..02)
+- Implemented 10 explainable scoring features as pure functions in `app.attribution.features`:
+  - `graph_distance` (weight 0.15): Non-linear penalty for hop distance ($1 \to 1.0, 2 \to 0.8, 3 \to 0.5, 4 \to 0.25, 5+ \to 0.1$).
+  - `known_deposit_match` (weight 0.20): Strong positive signal when target directly matches a verified deposit address.
+  - `cluster_association` (weight 0.15): Co-spend heuristics and multi-input clustering confidence.
+  - `funds_reached` (weight 0.15): Logarithmic volume scoring up to \$100,000+.
+  - `percentage_of_traced_funds` (weight 0.10): Pro-rata flow share captured by candidate. Core regression test confirms hop 3 capturing 88% outranks hop 2 capturing 5%.
+  - `transaction_frequency` (weight 0.05): Recurrent counterparty interaction scoring.
+  - `recency_of_interaction` (weight 0.05): Exponential time-decay over 365 days.
+  - `continuity_of_flow` (weight 0.05): Time delta penalty between successive hops.
+  - `intelligence_provider_confidence` (weight 0.05): Registry provider confidence score.
+  - `cross_chain_evidence` (weight 0.05): Bridge and cross-chain tracking confidence.
+- Default weights sum to exactly 1.000.
+- Dynamic weight renormalization via `renormalize_weights()` when features are inapplicable (e.g. single-chain investigations omit cross-chain evidence). Ensures invariant G2: $\sum \text{contributions} == \text{raw\_score} \pm 0.001$.
+
+### 6.2 Attribution Caps & Tier Assignment (PRD §10.3.3, FR-ATT-03..05)
+- Evaluates 8 deterministic caps (CAP-01 through CAP-08) in descending order of severity:
+  - **CAP-01 (Minimum Evidence Gate):** No direct hop 1/2 connection or cluster score < 0.2 caps score at 0.35 (`LOW`).
+  - **CAP-02 (High-Degree Intermediary):** Path traversed intermediary with degree $\ge 1000$ without deposit match caps score at 0.40 (`LOW`).
+  - **CAP-03 (Unresolved Flow):** $>50\%$ of path outflow absorbed by contract or unparsed transaction caps score at 0.50 (`MEDIUM`).
+  - **CAP-04 (Conflicting / Disputed Labels):** VASP label contradicted or disputed caps score at 0.45 (`MEDIUM`).
+  - **CAP-05 (Ambiguous Cross-Chain):** Bridge exit identified only by timing correlation caps score at 0.55 (`MEDIUM`).
+  - **CAP-06 (Incomplete Data):** Partial pagination or rate limit hit on path caps score at 0.60 (`MEDIUM`).
+  - **CAP-07 (Stale Label):** Attribution relies on label $>180$ days unconfirmed caps score at 0.65 (`MEDIUM`).
+  - **CAP-08 (Low Flow Proportion):** $<5\%$ of total traced funds reached candidate caps score at 0.40 (`LOW`).
+- Final confidence score is strictly bounded: $\text{final\_score} = \min(\text{raw\_score}, \min(\text{applied\_caps}))$.
+- Qualitative confidence tiers:
+  - `HIGH`: Score $\ge 0.70$
+  - `MEDIUM`: $0.40 \le \text{Score} < 0.70$
+  - `LOW`: Score $< 0.40$
+
+### 6.3 Explainability Payload & Dispositions (PRD §10.4, FR-ATT-06..09)
+- Structured `ExplainAttributionResponse` provides complete feature breakdown: raw values, normalized scores, dynamic weights, contributions, applied caps, and limitations.
+- Competing candidates flag (`competing_candidates = true`, `margin_to_next`) triggers whenever top two candidates differ by score $< 0.10$.
+- Human-in-the-loop investigator disposition (`accepted`, `rejected`, `under_review`, `unreviewed`) allows investigators to record review outcomes and subpoena notes.
+- **Score Invariance (FR-ATT-09):** Investigator disposition updates strictly update review metadata without mutating mathematical score, tier, rank, or factors.
+
+### 6.4 Independence of Attribution and Risk Engines (PRD §11.1, FR-RISK-03, AT-12)
+- Attribution Engine (`app.attribution`) has zero import or functional dependencies on risk scoring or risk models, ensuring objective, bias-free entity attribution.
