@@ -70,6 +70,112 @@ class AdapterNotConfiguredException(VaspTraceException):
         )
 
 
+# Provider Exception Hierarchy (PRD §9.2)
+class ProviderError(VaspTraceException):
+    def __init__(
+        self,
+        message: str = "Blockchain provider error",
+        error_code: str = "PROVIDER_ERROR",
+        status_code: int = status.HTTP_502_BAD_GATEWAY,
+        details: dict[str, Any] | None = None,
+    ):
+        super().__init__(
+            error_code=error_code,
+            message=message,
+            status_code=status_code,
+            details=details,
+        )
+
+
+class ProviderInvalidAddress(ProviderError):
+    def __init__(self, message: str = "Invalid address for chain", details: dict[str, Any] | None = None):
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_INVALID_ADDRESS",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            details=details,
+        )
+
+
+class ProviderUnsupportedChain(ProviderError):
+    def __init__(self, message: str = "Unsupported chain", details: dict[str, Any] | None = None):
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_UNSUPPORTED_CHAIN",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            details=details,
+        )
+
+
+class ProviderRateLimited(ProviderError):
+    def __init__(
+        self,
+        retry_after: float = 1.0,
+        message: str = "Provider rate limit reached",
+        details: dict[str, Any] | None = None,
+    ):
+        d = dict(details or {})
+        d["retry_after"] = retry_after
+        self.retry_after = retry_after
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_RATE_LIMITED",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            details=d,
+        )
+
+
+class ProviderTimeout(ProviderError):
+    def __init__(self, message: str = "Provider request timed out", details: dict[str, Any] | None = None):
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_TIMEOUT",
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            details=details,
+        )
+
+
+class ProviderUnavailable(ProviderError):
+    def __init__(self, message: str = "Provider service unavailable", details: dict[str, Any] | None = None):
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_UNAVAILABLE",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            details=details,
+        )
+
+
+class ProviderMalformedResponse(ProviderError):
+    def __init__(self, message: str = "Malformed provider response payload", details: dict[str, Any] | None = None):
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_MALFORMED_RESPONSE",
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            details=details,
+        )
+
+
+class ProviderAuthError(ProviderError):
+    def __init__(self, message: str = "Provider authentication failed", details: dict[str, Any] | None = None):
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_AUTH_ERROR",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+
+
+class ProviderNotFound(ProviderError):
+    def __init__(self, message: str = "Resource not found on provider", details: dict[str, Any] | None = None):
+        super().__init__(
+            message=message,
+            error_code="PROVIDER_NOT_FOUND",
+            status_code=status.HTTP_404_NOT_FOUND,
+            details=details,
+        )
+
+
+
 async def vasp_trace_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     if isinstance(exc, VaspTraceException):
         return JSONResponse(

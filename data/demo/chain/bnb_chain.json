@@ -1,0 +1,34 @@
+{
+  "transfers": [
+    {
+      "chain": "bnb_chain",
+      "transaction_hash": "SYN-TX-BNB-001",
+      "log_index": null,
+      "trace_id": null,
+      "block_number": 35000001,
+      "timestamp": "2026-08-01T10:00:00Z",
+      "source": "0x000000000000000000000000000000000000bb01",
+      "destination": "0x000000000000000000000000000000000000bb02",
+      "asset": "BNB",
+      "token_contract": null,
+      "amount": "50.0",
+      "amount_raw": "50000000000000000000",
+      "usd_value": "30000.00",
+      "transaction_type": "native",
+      "provider": "fixture:bnb_chain",
+      "status": "success"
+    }
+  ],
+  "token_transfers": [],
+  "balances": {
+    "0x000000000000000000000000000000000000bb01": [
+      {
+        "chain": "bnb_chain",
+        "address": "0x000000000000000000000000000000000000bb01",
+        "asset": "BNB",
+        "amount": "100.0",
+        "usd_value": "60000.00"
+      }
+    ]
+  }
+}

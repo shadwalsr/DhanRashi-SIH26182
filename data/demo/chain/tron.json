@@ -1,0 +1,53 @@
+{
+  "transfers": [
+    {
+      "chain": "tron",
+      "transaction_hash": "SYN-TX-TRX-001",
+      "log_index": null,
+      "trace_id": null,
+      "block_number": 61000001,
+      "timestamp": "2026-08-01T10:00:00Z",
+      "source": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "destination": "TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn",
+      "asset": "TRX",
+      "token_contract": null,
+      "amount": "20000.0",
+      "amount_raw": "20000000000",
+      "usd_value": "3000.00",
+      "transaction_type": "native",
+      "provider": "fixture:tron",
+      "status": "success"
+    }
+  ],
+  "token_transfers": [
+    {
+      "chain": "tron",
+      "transaction_hash": "SYN-TX-TRX-TOK-001",
+      "log_index": 1,
+      "trace_id": null,
+      "block_number": 61000002,
+      "timestamp": "2026-08-01T11:00:00Z",
+      "source": "TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn",
+      "destination": "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb",
+      "asset": "USDT",
+      "token_contract": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "amount": "10000.0",
+      "amount_raw": "10000000000",
+      "usd_value": "10000.00",
+      "transaction_type": "token",
+      "provider": "fixture:tron",
+      "status": "success"
+    }
+  ],
+  "balances": {
+    "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t": [
+      {
+        "chain": "tron",
+        "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "asset": "TRX",
+        "amount": "50000.0",
+        "usd_value": "7500.00"
+      }
+    ]
+  }
+}

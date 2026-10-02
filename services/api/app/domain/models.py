@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Any, Generic, Literal, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -43,6 +43,57 @@ class Transfer(BaseModel):
     transaction_type: Literal["native", "token", "contract_call", "bridge", "swap"] = "native"
     provider: str
     status: Literal["success", "failed"] = "success"
+
+
+Direction = Literal["in", "out", "both"]
+T = TypeVar("T")
+
+
+class Page(BaseModel, Generic[T]):
+    items: list[T]
+    next_cursor: str | None = None
+    truncated: bool = False
+    provider_meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class AddressValidation(BaseModel):
+    valid: bool
+    normalized: str
+    reason: str | None = None
+    kind: Literal["eoa", "contract", "unknown"] = "unknown"
+
+
+class TransactionDetail(BaseModel):
+    chain: Chain
+    tx_hash: str
+    block_number: int
+    timestamp: datetime
+    status: Literal["success", "failed"]
+    confirmations: int
+    transfers: list[Transfer] = Field(default_factory=list)
+    raw_logs: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class Balance(BaseModel):
+    chain: Chain
+    address: str
+    asset: str
+    amount: Decimal
+    usd_value: Decimal | None = None
+
+
+class NeighborSet(BaseModel):
+    address: str
+    chain: Chain
+    direction: Direction
+    counterparties: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ProviderHealth(BaseModel):
+    name: str
+    status: Literal["healthy", "degraded", "down", "disabled"]
+    latency_ms: float | None = None
+    quota_remaining: int | None = None
 
 
 class GraphNode(BaseModel):

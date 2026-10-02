@@ -82,3 +82,34 @@
 - $\text{age} < 180\text{ days}$: Factor 1.0 (fresh match).
 - $180 \le \text{age} \le 365\text{ days}$: Factor 0.7 (moderately stale).
 - $\text{age} > 365\text{ days}$: Factor 0.4 (stale, triggers CAP-07 downstream limitation).
+
+---
+
+## 4. Blockchain Data Layer (Phase 3)
+
+### 4.1 ChainProvider Protocol & Provider Abstraction
+- Standardized `ChainProvider` async protocol in `app.chain.interface` unifying EVM and Tron networks.
+- `FixtureChainProvider`: Loads recorded JSON fixtures from `data/demo/chain/*.json`. Accepts synthetic IDs (`SYN-TX-`) only when `DEMO_MODE=true` is set.
+- `EvmProvider`: Shared base class parameterized by chain ID, explorer API, and JSON-RPC URL; subclasses `EthereumProvider`, `BnbProvider`, and `PolygonProvider`.
+- `TronProvider`: Specialized TronGrid/TronScan provider handling TRC-20 token parsing and 19-block finality requirements.
+- Architecture-Only Stubs: `BitcoinProvider` and `SolanaProvider` raise `ProviderUnsupportedChain` (FR-DATA-08, P2).
+
+### 4.2 Address Checksum Verification (PRD §9.3)
+- EVM: Strict regex validation `^0x[0-9a-fA-F]{40}$`, zero-address rejection (`0x000...000`), and pure-Python EIP-55 mixed-case checksum verification. All-lower or all-upper addresses are accepted and normalized to lowercase.
+- Tron: Base58Check decoding with strict `0x41` version byte check, 25-byte length verification, and double-SHA256 checksum validation.
+
+### 4.3 Resilience & Reliability Architecture (PRD §9.4)
+- **Token Bucket Rate Limiting:** Per-(provider, key) rate limiting preventing 429 request storms.
+- **Circuit Breaker:** Opens after 5 consecutive failures or $\ge 50\%$ failure rate in a 20-call sliding window; transitions to half-open after 30 seconds.
+- **Exponential Backoff with Full Jitter:** Retries transient failures (timeouts, 429, 5xx) up to 3 times with full jitter and honors `Retry-After` headers.
+- **Deduplication:** Deduplicates transfers using canonical key `(chain, tx_hash, log_index/trace_id, source, destination, asset)` per FR-DATA-07.
+
+### 4.4 USD Pricing & Stablecoin Allowlist (PRD §9.7)
+- Historical daily close pricing via `PriceProvider`.
+- Stablecoin \$1.00 peg is applied only if the contract address is on the verified allowlist, tagged with provenance flag `DERIVED:peg_assumed`.
+- Missing prices yield `usd_value = null`.
+
+### 4.5 Secrets Protection & URL Sanitization (PRD §9.6)
+- API keys are redacted from logs and exception messages.
+- Stored credentials store a `secret_ref` and a 4-character SHA-256 fingerprint, never the plaintext key.
+- Provider request URLs are sanitized by stripping API key and authentication query parameters before persistence.
