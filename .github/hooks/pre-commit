@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+# Pre-commit hook to prevent accidental commit of .env or secret credentials (PRD 9.6, FR-SEC-03)
+
+# 1. Block staged .env files (except .env.example or .env.test)
+staged_files=$(git diff --cached --name-only)
+
+for file in $staged_files; do
+  case "$file" in
+    *.env | *.env.local | *.env.development | *.env.production)
+      echo "ERROR: Attempting to commit environment secret file: $file"
+      echo "Please unstage this file using: git reset HEAD $file"
+      exit 1
+      ;;
+  esac
+done
+
+# 2. Check for potential raw secrets in staged changes
+secret_matches=$(git diff --cached | grep -iE 'api[_-]?key\s*[:=]\s*["'\''][a-zA-Z0-9_\-]{16,}["'\'']|secret[_-]?key\s*[:=]\s*["'\''][a-zA-Z0-9_\-]{16,}["'\'']|0x[a-fA-F0-9]{64}' || true)
+
+if [ -n "$secret_matches" ]; then
+  echo "WARNING: Potential secret or private key pattern detected in staged changes:"
+  echo "$secret_matches"
+  echo "Verify that no production secrets or private keys are being committed!"
+fi
+
+exit 0

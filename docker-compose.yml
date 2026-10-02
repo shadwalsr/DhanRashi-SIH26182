@@ -1,0 +1,126 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vasp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vasp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vasp_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-vasp_trace}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vasp -d vasp_trace"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: vasp_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: vasp_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEMO_MODE=${DEMO_MODE:-true}
+      - LIVE_MODE=${LIVE_MODE:-false}
+      - DATABASE_URL=postgresql+asyncpg://vasp:vasp_secret@postgres:5432/vasp_trace
+      - DATABASE_URL_SYNC=postgresql://vasp:vasp_secret@postgres:5432/vasp_trace
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-must-be-changed-in-production-at-least-32-chars-long}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: vasp_worker
+    restart: unless-stopped
+    command: celery -A app.workers.celery_app worker -l info -c 4 -Q fetch,trace,analyze,report
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEMO_MODE=${DEMO_MODE:-true}
+      - LIVE_MODE=${LIVE_MODE:-false}
+      - DATABASE_URL=postgresql+asyncpg://vasp:vasp_secret@postgres:5432/vasp_trace
+      - DATABASE_URL_SYNC=postgresql://vasp:vasp_secret@postgres:5432/vasp_trace
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-must-be-changed-in-production-at-least-32-chars-long}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: vasp_beat
+    restart: unless-stopped
+    command: celery -A app.workers.celery_app beat -l info
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEMO_MODE=${DEMO_MODE:-true}
+      - LIVE_MODE=${LIVE_MODE:-false}
+      - DATABASE_URL=postgresql+asyncpg://vasp:vasp_secret@postgres:5432/vasp_trace
+      - DATABASE_URL_SYNC=postgresql://vasp:vasp_secret@postgres:5432/vasp_trace
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-must-be-changed-in-production-at-least-32-chars-long}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: vasp_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_DEMO_MODE=true
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
