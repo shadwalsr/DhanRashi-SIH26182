@@ -287,6 +287,7 @@ class GraphEdgeModel(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(String(50), default="success", nullable=False)
     provider: Mapped[str] = mapped_column(String(100), nullable=False)
     evidence_ids: Mapped[list[str] | None] = mapped_column(JSON_TYPE, nullable=True)
+    via_cross_chain_event_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     investigation: Mapped["Investigation"] = relationship()
 
@@ -377,4 +378,50 @@ class RiskAssessmentModel(Base, TimestampMixin):
     evidence_references: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
 
     investigation: Mapped["Investigation"] = relationship()
+
+
+class BridgeRegistryModel(Base, TimestampMixin):
+    __tablename__ = "bridge_registry"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    bridge_id: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    destination_chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    source_contract_address: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    destination_contract_address: Mapped[str] = mapped_column(String(255), nullable=False)
+    event_abi_signature: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fee_percentage: Mapped[float] = mapped_column(Float, default=0.002, nullable=False)
+    max_time_window_seconds: Mapped[int] = mapped_column(Integer, default=7200, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class CrossChainEventModel(Base, TimestampMixin):
+    __tablename__ = "cross_chain_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    investigation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("investigations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    bridge_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    source_tx_hash: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_address: Mapped[str] = mapped_column(String(255), nullable=False)
+    destination_chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    destination_tx_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    destination_address: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    asset: Mapped[str] = mapped_column(String(50), nullable=False)
+    source_amount: Mapped[Decimal] = mapped_column(Numeric(38, 18), nullable=False)
+    destination_amount: Mapped[Decimal | None] = mapped_column(Numeric(38, 18), nullable=True)
+    source_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    destination_timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    bridge_tx_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)  # 0.00 to 1.00
+    is_ambiguous: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    alternatives_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON_TYPE, default=list, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="MATCHED", nullable=False)  # MATCHED, AMBIGUOUS, UNMATCHED, PENDING
+    evidence_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("evidence.id"), nullable=True)
+
+    investigation: Mapped["Investigation"] = relationship()
+
 

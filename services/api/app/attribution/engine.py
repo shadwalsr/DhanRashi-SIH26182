@@ -23,6 +23,7 @@ from app.attribution.features import (
 from app.attribution.weights import DEFAULT_WEIGHTS, DEFAULT_WEIGHTS_VERSION, renormalize_weights
 from app.db.models import (
     AttributionResultModel,
+    CrossChainEventModel,
     GraphEdgeModel,
     GraphNodeModel,
     Investigation,
@@ -118,6 +119,14 @@ class AttributionEngine:
         # Check graph truncation for CAP-06
         is_partial = inv.status == "PARTIAL" or bool(inv.partial_reasons)
 
+        # Check cross-chain events for this investigation (FR-XCH-02, FR-XCH-03)
+        xchain_stmt = select(CrossChainEventModel).where(CrossChainEventModel.investigation_id == investigation_id)
+        xchain_res = await self.db.execute(xchain_stmt)
+        xchain_events = list(xchain_res.scalars().all())
+        has_bridge = len(xchain_events) > 0
+        max_xchain_conf = max((e.confidence for e in xchain_events), default=1.0)
+        is_xchain_ambiguous = any(e.is_ambiguous or e.confidence < 0.80 for e in xchain_events)
+
         # 4. Score each candidate VASP
         candidates: list[CandidateAttribution] = []
 
@@ -130,6 +139,9 @@ class AttributionEngine:
                 is_partial=is_partial,
                 inv=inv,
                 weights_version=weights_version,
+                has_bridge_hop=has_bridge,
+                bridge_confidence=max_xchain_conf,
+                is_cross_chain_ambiguous=is_xchain_ambiguous,
             )
             candidates.append(candidate_attr)
 
@@ -199,6 +211,9 @@ class AttributionEngine:
         is_partial: bool,
         inv: Investigation,
         weights_version: str,
+        has_bridge_hop: bool = False,
+        bridge_confidence: float = 1.0,
+        is_cross_chain_ambiguous: bool = False,
     ) -> CandidateAttribution:
         """Computes 10 features, renormalizes weights, applies caps, and builds explanation."""
         # Query canonical VASP name from registry
@@ -260,7 +275,9 @@ class AttributionEngine:
         f_recency = compute_recency(latest_tx_time, as_of=inv.created_at)
         f_continuity = compute_temporal_continuity(24.0)  # Sequential trace continuity
         f_intel_conf = compute_intelligence_provider_confidence(max_confidence, len(reg_addrs))
-        f_cross_chain, is_xchain_applicable = compute_cross_chain_evidence(has_bridge_hop=False)
+        f_cross_chain, is_xchain_applicable = compute_cross_chain_evidence(
+            has_bridge_hop=has_bridge_hop, bridge_confidence=bridge_confidence
+        )
 
         raw_factor_values: dict[str, tuple[float, Any, bool, str]] = {
             "percentage_of_traced_funds": (f_percentage, f"{round(f_percentage * 100, 1)}%", True, "Fraction of total traced funds arriving at candidate"),
@@ -272,7 +289,7 @@ class AttributionEngine:
             "cluster_association": (f_cluster, "cluster" if has_cluster else "none", True, "Associated wallet cluster membership"),
             "recency": (f_recency, latest_tx_time.isoformat() if latest_tx_time else "none", True, "Recency of transfer relative to analysis window"),
             "transaction_frequency": (f_freq, f"{tx_count} transfers", True, "Repeated flow frequency"),
-            "cross_chain_evidence": (f_cross_chain, "none", is_xchain_applicable, "Cross-chain bridge connection"),
+            "cross_chain_evidence": (f_cross_chain, f"{round(bridge_confidence, 2)}" if is_xchain_applicable else "none", is_xchain_applicable, "Cross-chain bridge connection"),
         }
 
         # 2. Renormalize weights across applicable features (FR-ATT-03, G2)
@@ -308,8 +325,8 @@ class AttributionEngine:
             "unresolved_percentage": 1.0 - f_percentage,
             "has_conflicting_labels": False,
             "is_disputed": is_disputed,
-            "is_cross_chain_ambiguous": False,
-            "cross_chain_confidence": 1.0,
+            "is_cross_chain_ambiguous": is_cross_chain_ambiguous,
+            "cross_chain_confidence": bridge_confidence,
             "is_truncated_path": is_partial,
             "is_stale_over_365": is_stale_365,
             "flow_percentage": f_percentage,

@@ -9,6 +9,8 @@ from app.core.audit import log_audit_event
 from app.core.errors import NotFoundException
 from app.core.rbac import check_case_authorization, require_permission
 from app.core.validation import validate_wallet_address
+from app.crosschain.engine import CrossChainEngine
+from app.crosschain.registry import BridgeRegistry
 from app.db.models import Case, Investigation, RiskAssessmentModel, User
 from app.db.session import get_db
 from app.domain.enums import AuditOutcome, InvestigationState
@@ -16,6 +18,9 @@ from app.domain.models import (
     AnalystNoteCreate,
     AttributionDispositionRequest,
     AttributionResponse,
+    BridgeDefinition,
+    CrossChainDetectionResponse,
+    CrossChainEventRead,
     EvidenceChainVerificationResult,
     EvidenceRead,
     ExplainAttributionResponse,
@@ -811,5 +816,88 @@ async def run_investigation_risk(
 
     await session.commit()
     return risk_result
+
+
+# -----------------------------------------------------------------------------
+# Phase 7: Cross-Chain Layer Endpoints (FR-XCH-01..05)
+# -----------------------------------------------------------------------------
+
+
+@router.get("/bridges/registry", response_model=list[BridgeDefinition])
+async def list_registered_bridges(
+    current_user: User = Depends(require_permission("vasp.view")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Lists all registered bridge protocols, contracts, and supported chain pairs (FR-XCH-01)."""
+    registry = BridgeRegistry(session)
+    await registry.sync_with_database()
+    return registry.list_bridges()
+
+
+@router.get("/{investigation_id}/cross-chain", response_model=list[CrossChainEventRead])
+async def list_investigation_cross_chain_events(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("graph.view")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Retrieves all detected cross-chain bridge events for an investigation (FR-XCH-02)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    engine = CrossChainEngine(session)
+    events = await engine.get_events(investigation_id)
+    return events
+
+
+@router.post("/{investigation_id}/cross-chain/detect", response_model=CrossChainDetectionResponse)
+async def detect_cross_chain_events(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("investigation.run")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Executes cross-chain bridge detection and source-to-destination matching (FR-XCH-02, FR-XCH-03)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    evidence_engine = EvidenceEngine(session)
+    engine = CrossChainEngine(session, evidence_engine=evidence_engine)
+    events = await engine.detect_and_match(investigation_id)
+
+    await log_audit_event(
+        session=session,
+        user_id=current_user.id,
+        action="CROSS_CHAIN_DETECT_RUN",
+        resource_type="cross_chain_events",
+        resource_id=str(investigation_id),
+        outcome=AuditOutcome.ALLOW,
+        details={
+            "investigation_id": str(investigation_id),
+            "events_detected": len(events),
+        },
+    )
+
+    await session.commit()
+    summary = f"Detected and matched {len(events)} cross-chain event(s) across registered bridges."
+    return CrossChainDetectionResponse(
+        investigation_id=investigation_id,
+        events_detected=len(events),
+        events=[CrossChainEventRead.model_validate(e) for e in events],
+        summary=summary,
+    )
+
 
 

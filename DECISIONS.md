@@ -227,3 +227,42 @@
   - Toggling or modifying risk data results in mathematically invariant attribution outputs.
 - **FR-RISK-04 VASP Neutrality:**
   - Regulated VASP nodes are terminal destinations and never carry a risk score or illicit label. Risk assessment strictly evaluates the source wallet and transit laundering trail.
+
+---
+
+## 8. Cross-Chain Layer (Phase 7)
+
+### 8.1 Bridge Registry & Pluggable Architecture (PRD §7.3, §14, FR-XCH-01, FR-XCH-05)
+- **Pluggable Bridge Adapter Interface (`BridgeAdapter`):**
+  - Standard protocol defining `bridge_id`, `bridge_name`, `supported_chains`, `supports_contract()`, `detect_bridge_interaction()`, and `match()`.
+  - Concrete `DemoBridgeAdapter` handles cross-chain liquidity pool and lock-and-mint bridge protocols.
+  - Extensibility verified via `StubBridgeAdapter` (FR-XCH-05): new cross-chain bridges register without altering the core pipeline or attribution engine.
+- **Bridge Registry (`bridge_registry` table & `BridgeRegistry` class):**
+  - Maintains source/destination contract addresses, deposit/payout event signatures, slippage/fee tolerances (default 2%), and time windows (default 120 min).
+  - Synced to persistent database and accessible via REST API (`GET /api/v1/investigations/bridges/registry`).
+
+### 8.2 Cross-Chain Detection & Source-to-Destination Matching (FR-XCH-02, FR-XCH-03)
+- **Detection (`FR-XCH-02`):**
+  - Flags graph edges interacting with registered bridge contracts and generates persistent `cross_chain_events` records.
+- **Matcher Logic (`FR-XCH-03`):**
+  - **Tier 1 (Exact ID Match):** Bridge-provided deposit/sequence ID matches destination transfer $\to$ `confidence = 0.98`, `is_ambiguous = False`.
+  - **Tier 2 (Heuristic Match):** Transfer amount matches within 2% fee tolerance and destination timestamp falls within $[t_{\text{src}}, t_{\text{src}} + 120\text{ min}]$.
+    - If unique: `confidence = 0.85`, `is_ambiguous = False`.
+  - **Tier 3 (Ambiguity & PRD Failure Matrix Row 15):**
+    - If multiple plausible destination transfers match amount and time criteria: records all candidates in `alternatives_json`, flags `is_ambiguous = True`, and caps confidence at $0.65$ ($< 0.80$).
+    - This deterministic confidence threshold directly activates **CAP-05**, capping the downstream attribution score at $0.65$ (`MEDIUM` tier).
+
+### 8.3 Destination Trace Continuation & Evidence Chaining (FR-XCH-04, FR-EVD-01)
+- **Trace Continuation (FR-XCH-04):**
+  - If match confidence $\ge 0.50$, destination graph edges are tagged with `via_cross_chain_event_id = str(event.id)`.
+  - Graph visualization and export engines utilize `via_cross_chain_event_id` to render seamless cross-chain edge connections.
+- **Cryptographic Evidence Record:**
+  - Every detected match emits an immutable evidence record (`evidence_type = "cross_chain_match"`, `provenance_class = "DERIVED"`), linked into the investigation's hash chain.
+
+### 8.4 Attribution Engine Integration & Case 5 Acceptance Oracle
+- **Attribution Feature Wiring:**
+  - Attribution Engine incorporates `cross_chain_evidence` factor when candidate paths traverse bridge hops.
+  - Rebalances dynamic weights across active features, ensuring G2 invariant ($\sum \text{contributions} == \text{raw\_score} \pm 0.001$).
+- **Case 5 Acceptance Oracle:**
+  - Scenario: Ethereum seed wallet deposits $5,000 USDC into Demo Bridge $\to$ bridge pays out $4,990 USDC on Polygon to intermediary $\to$ intermediary deposits funds into Kraken.
+  - Verified: Produces exactly **1** `CrossChainEvent` (`BRIDGE-DEMO-001`), tags downstream edge, and ranks Kraken as top candidate with active `cross_chain_evidence` factor.

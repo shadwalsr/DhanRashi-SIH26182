@@ -500,4 +500,53 @@ class RiskAssessmentRunResponse(BaseModel):
     calculated_at: datetime
 
 
+class BridgeDefinition(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    bridge_id: str
+    name: str
+    source_chain: str
+    destination_chain: str
+    source_contract_address: str
+    destination_contract_address: str
+    event_abi_signature: str | None = None
+    fee_percentage: float = 0.002
+    max_time_window_seconds: int = 7200
+    is_active: bool = True
+
+
+class CrossChainEventRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    investigation_id: UUID
+    bridge_id: str
+    source_chain: str
+    source_tx_hash: str
+    source_address: str
+    destination_chain: str
+    destination_tx_hash: str | None = None
+    destination_address: str | None = None
+    asset: str
+    source_amount: Decimal
+    destination_amount: Decimal | None = None
+    source_timestamp: datetime
+    destination_timestamp: datetime | None = None
+    bridge_tx_id: str | None = None
+    confidence: float
+    is_ambiguous: bool = False
+    alternatives_json: list[dict[str, Any]] = Field(default_factory=list)
+    status: str
+    evidence_id: UUID | None = None
+    created_at: datetime
+
+
+class CrossChainDetectionResponse(BaseModel):
+    investigation_id: UUID
+    events_detected: int
+    events: list[CrossChainEventRead] = Field(default_factory=list)
+    summary: str
+
+
+
 

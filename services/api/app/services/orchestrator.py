@@ -202,7 +202,12 @@ class InvestigationOrchestrator:
                 if not edge.evidence_ids:
                     await evidence_engine.record_transfer_evidence(inv.id, edge)
 
-            # Execute Attribution Engine (FR-ATT-01..09, FR-EVD-01)
+            # Detect bridges and match cross-chain events (FR-XCH-02, FR-XCH-03)
+            from app.crosschain.engine import CrossChainEngine
+            xchain_engine = CrossChainEngine(self.db, evidence_engine=evidence_engine)
+            await xchain_engine.detect_and_match(inv.id)
+
+            # Execute Attribution Engine (FR-ATT-01..09, FR-EVD-01, FR-XCH-02)
             from app.attribution.engine import AttributionEngine
             attr_engine = AttributionEngine(self.db, evidence_engine=evidence_engine)
             attr_result = await attr_engine.run(inv.id)

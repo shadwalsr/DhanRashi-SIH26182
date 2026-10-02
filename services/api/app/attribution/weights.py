@@ -12,7 +12,7 @@ DEFAULT_WEIGHTS: dict[str, float] = {
     "cluster_association": 0.05,
     "recency": 0.05,
     "transaction_frequency": 0.05,
-    "cross_chain_evidence": 0.00,  # 0.00 default when inactive; active bridge investigations rebalance
+    "cross_chain_evidence": 0.10,
 }
 
 
