@@ -66,6 +66,9 @@ class EvidenceType(str, Enum):
     CROSS_CHAIN_MATCH = "cross_chain_match"
     HEURISTIC = "heuristic"
     ANALYST_NOTE = "analyst_note"
+    RISK_SIGNAL = "risk_signal"
+    MANUAL_ATTACHMENT = "manual_attachment"
+
 
 
 class UserRole(str, Enum):
@@ -124,4 +127,23 @@ class AttributionDisposition(str, Enum):
     ACCEPTED = "accepted"
     REJECTED = "rejected"
     NEEDS_REVIEW = "needs_review"
+
+
+class RiskTier(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    SEVERE = "SEVERE"
+
+
+class RiskSignalCode(str, Enum):
+    MIXER_INTERACTION = "mixer_interaction"
+    RAPID_MOVEMENT = "rapid_movement"
+    PEEL_CHAIN = "peel_chain"
+    HIGH_VALUE_TRANSFERS = "high_value_transfers"
+    HIGH_RISK_COUNTERPARTY = "high_risk_counterparty"
+    SANCTIONED_ENTITY = "sanctioned_entity"
+    RANSOMWARE = "ransomware"
+    DARKNET = "darknet"
+
 

@@ -421,3 +421,83 @@ class ExplainAttributionResponse(BaseModel):
     reproducibility_hash: str | None = None
 
 
+class EvidenceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    investigation_id: UUID
+    sequence_num: int
+    evidence_type: str
+    provenance_class: str
+    source: str
+    source_ref: str
+    raw_hash: str
+    data_payload: dict[str, Any]
+    derived_from: list[str] = Field(default_factory=list)
+    prev_evidence_hash: str
+    evidence_hash: str
+    created_by_id: UUID | None = None
+    created_at: datetime
+
+
+class EvidenceFilterParams(BaseModel):
+    provenance_class: str | None = None
+    evidence_type: str | None = None
+    limit: int = 100
+    offset: int = 0
+
+
+class EvidenceChainVerificationResult(BaseModel):
+    investigation_id: UUID
+    is_valid: bool
+    total_records: int
+    latest_evidence_hash: str | None = None
+    error_message: str | None = None
+    verified_at: datetime
+
+
+class AnalystNoteCreate(BaseModel):
+    note: str
+    derived_from: list[str] = Field(default_factory=list)
+    source_ref: str | None = None
+
+
+class RiskSignal(BaseModel):
+    signal_code: str
+    name: str
+    score: int
+    weight: float
+    description: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    evidence_ids: list[str] = Field(default_factory=list)
+
+
+class RiskAssessmentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    investigation_id: UUID
+    version: int = 1
+    target_address: str
+    chain: str
+    overall_score: int
+    tier: str
+    signals: list[RiskSignal] = Field(default_factory=list)
+    summary: str
+    evidence_references: list[str] = Field(default_factory=list)
+    created_at: datetime
+
+
+class RiskAssessmentRunResponse(BaseModel):
+    investigation_id: UUID
+    target_address: str
+    chain: str
+    overall_score: int
+    tier: str
+    signals: list[RiskSignal]
+    summary: str
+    evidence_references: list[str]
+    calculated_at: datetime
+
+
+

@@ -11,7 +11,7 @@ from app.core.audit import log_audit_event
 from app.core.errors import DuplicateResourceException, NotFoundException, VaspTraceException
 from app.core.intelligence import LocalRegistryAdapter
 from app.core.validation import validate_wallet_address
-from app.db.models import Investigation
+from app.db.models import GraphEdgeModel, Investigation
 from app.domain.enums import AuditOutcome, Chain, InvestigationState
 from app.graph.expansion import GraphExpansionEngine
 from app.graph.flow import propagate_fund_flows
@@ -183,7 +183,7 @@ class InvestigationOrchestrator:
                     "stats": expansion_result,
                 }
 
-            # 4. ANALYZING (Flow propagation & Attribution)
+            # 4. ANALYZING (Flow propagation, Evidence, Attribution & Risk)
             await transition_state(self.db, inv, InvestigationState.ANALYZING, user_id=user_id)
             flow_result = await propagate_fund_flows(
                 db=self.db,
@@ -192,9 +192,30 @@ class InvestigationOrchestrator:
                 seed_chain=inv.blockchain,
             )
 
+            # Record transfer evidence for all graph edges (FR-EVD-04)
+            from app.evidence.engine import EvidenceEngine
+            evidence_engine = EvidenceEngine(self.db)
+
+            edges_stmt = select(GraphEdgeModel).where(GraphEdgeModel.investigation_id == inv.id)
+            edges_res = await self.db.execute(edges_stmt)
+            for edge in edges_res.scalars().all():
+                if not edge.evidence_ids:
+                    await evidence_engine.record_transfer_evidence(inv.id, edge)
+
+            # Execute Attribution Engine (FR-ATT-01..09, FR-EVD-01)
             from app.attribution.engine import AttributionEngine
-            attr_engine = AttributionEngine(self.db)
+            attr_engine = AttributionEngine(self.db, evidence_engine=evidence_engine)
             attr_result = await attr_engine.run(inv.id)
+
+            # Execute Independent Risk Engine (FR-RISK-01..04)
+            from app.risk.engine import RiskEngine
+            risk_engine = RiskEngine(self.db, evidence_engine=evidence_engine)
+            risk_result = await risk_engine.run(inv.id)
+
+            # Verify invariant FR-EVD-01: Every attribution result links >= 1 evidence row
+            for cand in attr_result.candidates:
+                if not cand.evidence_references:
+                    raise ValueError(f"Invariant FR-EVD-01 violated: candidate {cand.vasp_id} has no evidence references")
 
             # Determine final state: PARTIAL if truncation occurred, else COMPLETED
             if expansion_result["has_truncation"]:
@@ -215,6 +236,7 @@ class InvestigationOrchestrator:
                 "expansion": expansion_result,
                 "flow": flow_result,
                 "attribution": attr_result.model_dump(),
+                "risk": risk_result.model_dump(),
             }
 
         except Exception as exc:

@@ -198,3 +198,32 @@
 
 ### 6.4 Independence of Attribution and Risk Engines (PRD §11.1, FR-RISK-03, AT-12)
 - Attribution Engine (`app.attribution`) has zero import or functional dependencies on risk scoring or risk models, ensuring objective, bias-free entity attribution.
+
+
+---
+
+## 7. Risk and Evidence Engines (Phase 6)
+
+### 7.1 Immutable Evidence Ledger & Hash Chain (PRD §8.1, §8.2, §13.1, FR-EVD-01..04)
+- **Schema & Ledger (`evidence`):** Stores discrete factual assertions with monotonic `sequence_num` per investigation, strict epistemic labeling (`provenance_class` ∈ {`OBSERVED`, `THIRD-PARTY INTELLIGENCE`, `DERIVED`, `INFERENCE`}), `raw_hash` of payload, `derived_from[]` references, and cryptographic hash chaining (`prev_evidence_hash` → `evidence_hash`).
+- **Genesis & Hash Chain (FR-EVD-02):** Sequence 1 uses genesis hash (`0` * 64). Subsequent records chain $H_{i} = \text{SHA256}(H_{i-1} : \text{inv\_id} : \text{seq} : \text{raw\_hash} : \text{created\_at\_utc})$.
+- **Tamper Detection (`verify_chain`):** System walks the ledger verifying contiguous sequence numbers, pointer continuity, and canonical SHA-256 payload integrity.
+- **FR-EVD-01 Invariant:** Every attribution candidate links to at least 1 verified evidence record in `evidence_references`.
+- **FR-EVD-04 Edge-to-Evidence Links:** Graph edges store associated `evidence_ids` allowing investigators to query all raw transfers and proof records backing any graph hop.
+- **Append-Only Analyst Notes:** Investigator notes are recorded as immutable evidence rows with `provenance_class = INFERENCE`.
+
+### 7.2 Independent Risk Scoring Engine (PRD §12, FR-RISK-01..04)
+- **P0 Signals (FR-RISK-01):**
+  - `mixer_interaction` (30 points): Detects 1-2 hop interactions with mixer contracts/services (Tornado Cash, Blender, ChipMixer).
+  - `peel_chain` (24 points): Identifies structured peeling behavior across asymmetric intermediate splitting nodes.
+  - `rapid_movement` (18 points): Flags transfers occurring in $< 15$ minutes between consecutive hops.
+  - `high_value_transfers` (10 points): Flags single transfers $\ge \$10,000$ or cumulative traced volume $\ge \$50,000$.
+  - `high_risk_counterparty` (25 points): Direct or transitive association with flagged illicit entities (sanctioned, darknet, exploit).
+- **Case 4 Acceptance Oracle (FR-RISK-02):**
+  - Case 4 combines mixer interaction (30) + peel chain (24) + rapid movement (18) = exactly **72 / HIGH**.
+  - Risk Tiers: `LOW` (0–29), `MEDIUM` (30–59), `HIGH` (60–84), `SEVERE` (85–100).
+- **FR-RISK-03 / AT-12 Strict Independence:**
+  - Attribution Engine (`app.attribution`) has zero import or operational dependency on `app.risk`.
+  - Toggling or modifying risk data results in mathematically invariant attribution outputs.
+- **FR-RISK-04 VASP Neutrality:**
+  - Regulated VASP nodes are terminal destinations and never carry a risk score or illicit label. Risk assessment strictly evaluates the source wallet and transit laundering trail.

@@ -39,8 +39,9 @@ from app.domain.models import (
 class AttributionEngine:
     """Core Attribution Engine ranking candidate VASPs by explainable weighted features (PRD §11, FR-ATT-01..09)."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, evidence_engine: Any | None = None):
         self.db = db
+        self.evidence_engine = evidence_engine
 
     async def run(
         self,
@@ -319,6 +320,22 @@ class AttributionEngine:
         final_score, caps_applied, limitations = evaluate_caps(raw_score, cap_context)
         tier = assign_tier(final_score)
 
+        # Collect or create evidence references (FR-EVD-01)
+        evidence_refs: list[str] = []
+        if self.evidence_engine is not None:
+            ev_rec = await self.evidence_engine.record_vasp_evidence(
+                investigation_id=inv.id,
+                vasp_id=vasp_id,
+                vasp_name=vasp_name,
+                address=supporting_addresses[0] if supporting_addresses else "unknown",
+                chain=inv.blockchain,
+                address_type=primary_addr_type,
+                confidence=float(max_confidence),
+            )
+            evidence_refs.append(str(ev_rec.id))
+        else:
+            evidence_refs.append(f"REG-{vasp_id}")
+
         return CandidateAttribution(
             vasp_id=vasp_id,
             vasp_name=vasp_name,
@@ -332,5 +349,5 @@ class AttributionEngine:
             caps_applied=caps_applied,
             limitations=limitations,
             supporting_addresses=supporting_addresses,
-            evidence_references=[f"REG-{vasp_id}", f"GRAPH-{inv.id}"],
+            evidence_references=evidence_refs,
         )

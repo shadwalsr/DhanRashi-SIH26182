@@ -329,3 +329,52 @@ class AttributionResultModel(Base, TimestampMixin):
 
     investigation: Mapped["Investigation"] = relationship()
     disposition_user: Mapped[Optional["User"]] = relationship()
+
+
+class EvidenceModel(Base, TimestampMixin):
+    __tablename__ = "evidence"
+    __table_args__ = (
+        UniqueConstraint("investigation_id", "sequence_num", name="uq_evidence_investigation_seq"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    investigation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("investigations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    sequence_num: Mapped[int] = mapped_column(Integer, nullable=False)
+    evidence_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    provenance_class: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    raw_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    data_payload: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, nullable=False)
+    derived_from: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
+    prev_evidence_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    evidence_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    created_by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    investigation: Mapped["Investigation"] = relationship()
+    created_by: Mapped[Optional["User"]] = relationship()
+
+
+class RiskAssessmentModel(Base, TimestampMixin):
+    __tablename__ = "risk_assessments"
+    __table_args__ = (
+        UniqueConstraint("investigation_id", "version", name="uq_risk_investigation_version"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    investigation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("investigations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    target_address: Mapped[str] = mapped_column(String(255), nullable=False)
+    chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)  # 0 to 100
+    tier: Mapped[str] = mapped_column(String(50), nullable=False)  # LOW, MEDIUM, HIGH, SEVERE
+    signals_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON_TYPE, nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_references: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
+
+    investigation: Mapped["Investigation"] = relationship()
+

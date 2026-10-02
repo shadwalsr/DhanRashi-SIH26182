@@ -9,18 +9,26 @@ from app.core.audit import log_audit_event
 from app.core.errors import NotFoundException
 from app.core.rbac import check_case_authorization, require_permission
 from app.core.validation import validate_wallet_address
-from app.db.models import Case, Investigation, User
+from app.db.models import Case, Investigation, RiskAssessmentModel, User
 from app.db.session import get_db
 from app.domain.enums import AuditOutcome, InvestigationState
 from app.domain.models import (
+    AnalystNoteCreate,
     AttributionDispositionRequest,
     AttributionResponse,
+    EvidenceChainVerificationResult,
+    EvidenceRead,
     ExplainAttributionResponse,
     GraphResponse,
     InvestigationCreate,
     InvestigationRead,
     InvestigationStatusResponse,
+    RiskAssessmentRead,
+    RiskAssessmentRunResponse,
+    RiskSignal,
 )
+from app.evidence.engine import EvidenceEngine
+from app.risk.engine import RiskEngine
 
 router = APIRouter(prefix="/investigations", tags=["Investigations"])
 
@@ -565,4 +573,243 @@ async def update_disposition(
         "disposition": attr_row.disposition,
         "score": attr_row.score,  # explicitly confirms score is unchanged
     }
+
+
+# -----------------------------------------------------------------------------
+# Phase 6: Evidence Ledger Endpoints (FR-EVD-01..04)
+# -----------------------------------------------------------------------------
+
+
+@router.get("/{investigation_id}/evidence", response_model=list[EvidenceRead])
+async def list_investigation_evidence(
+    investigation_id: UUID,
+    provenance_class: str | None = Query(None, description="Filter by provenance class (OBSERVED, THIRD-PARTY INTELLIGENCE, DERIVED, INFERENCE)"),
+    evidence_type: str | None = Query(None, description="Filter by evidence type"),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(require_permission("evidence.view")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Lists immutable evidence records with provenance class filtering (FR-EVD-03)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    evidence_engine = EvidenceEngine(session)
+    records = await evidence_engine.get_evidence(
+        investigation_id=investigation_id,
+        provenance_class=provenance_class,
+        evidence_type=evidence_type,
+        limit=limit,
+        offset=offset,
+    )
+    return records
+
+
+@router.get("/{investigation_id}/evidence/verify", response_model=EvidenceChainVerificationResult)
+async def verify_evidence_hash_chain(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("evidence.view")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Cryptographically verifies the SHA-256 hash chain of the investigation's evidence ledger (FR-EVD-02)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    evidence_engine = EvidenceEngine(session)
+    return await evidence_engine.verify_chain(investigation_id)
+
+
+@router.get("/{investigation_id}/evidence/{evidence_id}", response_model=EvidenceRead)
+async def get_evidence_detail(
+    investigation_id: UUID,
+    evidence_id: UUID,
+    current_user: User = Depends(require_permission("evidence.view")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Retrieves a single immutable evidence record by its UUID."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    evidence_engine = EvidenceEngine(session)
+    record = await evidence_engine.get_evidence_by_id(investigation_id, evidence_id)
+    if not record:
+        raise NotFoundException(f"Evidence {evidence_id} not found in this investigation.")
+    return record
+
+
+@router.post("/{investigation_id}/evidence/notes", response_model=EvidenceRead, status_code=status.HTTP_201_CREATED)
+async def add_investigator_evidence_note(
+    investigation_id: UUID,
+    payload: AnalystNoteCreate,
+    current_user: User = Depends(require_permission("evidence.add_note")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Appends an investigator note (INFERENCE) to the immutable evidence ledger (FR-EVD-02)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    evidence_engine = EvidenceEngine(session)
+    ev_record = await evidence_engine.add_analyst_note(
+        investigation_id=investigation_id,
+        note=payload.note,
+        user_id=current_user.id,
+        derived_from=payload.derived_from,
+        source_ref=payload.source_ref,
+    )
+
+    await log_audit_event(
+        session=session,
+        user_id=current_user.id,
+        action="EVIDENCE_NOTE_ADDED",
+        resource_type="evidence",
+        resource_id=str(ev_record.id),
+        outcome=AuditOutcome.ALLOW,
+        details={
+            "investigation_id": str(investigation_id),
+            "sequence_num": ev_record.sequence_num,
+            "evidence_hash": ev_record.evidence_hash,
+        },
+    )
+
+    await session.commit()
+    return ev_record
+
+
+@router.get("/{investigation_id}/edges/{edge_id}/evidence", response_model=list[EvidenceRead])
+async def get_edge_evidence(
+    investigation_id: UUID,
+    edge_id: UUID,
+    current_user: User = Depends(require_permission("evidence.view")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Returns all evidence items backing a specific graph edge (FR-EVD-04)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    evidence_engine = EvidenceEngine(session)
+    return await evidence_engine.get_evidence_for_edge(investigation_id, edge_id)
+
+
+# -----------------------------------------------------------------------------
+# Phase 6: Risk Engine Endpoints (FR-RISK-01..04)
+# -----------------------------------------------------------------------------
+
+
+@router.get("/{investigation_id}/risk", response_model=RiskAssessmentRead)
+async def get_investigation_risk(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("risk.view")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Retrieves the latest independent risk assessment for the investigation (FR-RISK-02)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    risk_stmt = (
+        select(RiskAssessmentModel)
+        .where(RiskAssessmentModel.investigation_id == investigation_id)
+        .order_by(RiskAssessmentModel.version.desc())
+        .limit(1)
+    )
+    risk_res = await session.execute(risk_stmt)
+    risk_row = risk_res.scalar_one_or_none()
+    if not risk_row:
+        raise NotFoundException("No risk assessment found for this investigation. Run analysis first.")
+
+    return RiskAssessmentRead(
+        id=risk_row.id,
+        investigation_id=risk_row.investigation_id,
+        version=risk_row.version,
+        target_address=risk_row.target_address,
+        chain=risk_row.chain,
+        overall_score=risk_row.overall_score,
+        tier=risk_row.tier,
+        signals=[RiskSignal(**s) for s in risk_row.signals_json],
+        summary=risk_row.summary,
+        evidence_references=risk_row.evidence_references,
+        created_at=risk_row.created_at,
+    )
+
+
+@router.post("/{investigation_id}/risk/run", response_model=RiskAssessmentRunResponse)
+async def run_investigation_risk(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("investigation.run")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Executes/re-evaluates risk scoring for the specified investigation (FR-RISK-01..04)."""
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv = (await session.execute(inv_stmt)).scalar_one_or_none()
+    if not inv:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == inv.case_id, Case.org_id == current_user.org_id)
+    case = (await session.execute(case_stmt)).scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    evidence_engine = EvidenceEngine(session)
+    risk_engine = RiskEngine(session, evidence_engine=evidence_engine)
+    risk_result = await risk_engine.run(investigation_id)
+
+    await log_audit_event(
+        session=session,
+        user_id=current_user.id,
+        action="RISK_ASSESSMENT_RUN",
+        resource_type="risk_assessment",
+        resource_id=str(investigation_id),
+        outcome=AuditOutcome.ALLOW,
+        details={
+            "investigation_id": str(investigation_id),
+            "overall_score": risk_result.overall_score,
+            "tier": risk_result.tier,
+            "signal_count": len(risk_result.signals),
+        },
+    )
+
+    await session.commit()
+    return risk_result
+
 
