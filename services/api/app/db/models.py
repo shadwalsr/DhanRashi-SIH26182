@@ -1,5 +1,6 @@
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Optional
 
 from sqlalchemy import (
@@ -9,6 +10,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -220,3 +222,70 @@ class RegistrySnapshot(Base):
     record_count: Mapped[int] = mapped_column(Integer, nullable=False)
     snapshot_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class GraphNodeModel(Base, TimestampMixin):
+    __tablename__ = "graph_nodes"
+    __table_args__ = (
+        UniqueConstraint("investigation_id", "node_key", name="uq_investigation_node_key"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    investigation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investigations.id"), nullable=False, index=True)
+    node_key: Mapped[str] = mapped_column(String(255), nullable=False)  # Format: chain:address
+    chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    address: Mapped[str] = mapped_column(String(255), nullable=False)
+    node_type: Mapped[str] = mapped_column(String(50), default="wallet", nullable=False)
+    address_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    vasp_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    label: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_terminal: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    inflow_usd: Mapped[Decimal] = mapped_column(Numeric(20, 2), default=Decimal(0), nullable=False)
+    outflow_usd: Mapped[Decimal] = mapped_column(Numeric(20, 2), default=Decimal(0), nullable=False)
+    first_seen_ts: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_seen_ts: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    hop: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    provenance_json: Mapped[dict[str, Any] | None] = mapped_column(JSON_TYPE, nullable=True)
+
+    investigation: Mapped["Investigation"] = relationship()
+
+
+class GraphEdgeModel(Base, TimestampMixin):
+    __tablename__ = "graph_edges"
+    __table_args__ = (
+        UniqueConstraint(
+            "investigation_id",
+            "chain",
+            "transaction_hash",
+            "log_index",
+            "trace_id",
+            "source_key",
+            "destination_key",
+            "asset",
+            name="uq_investigation_edge_dedup",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    investigation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("investigations.id"), nullable=False, index=True)
+    source_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    destination_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    edge_type: Mapped[str] = mapped_column(String(50), default="native_transfer", nullable=False)
+    transaction_hash: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    log_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    trace_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    block_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    asset: Mapped[str] = mapped_column(String(50), nullable=False)
+    token_contract: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    amount: Mapped[Decimal] = mapped_column(Numeric(38, 18), nullable=False)
+    amount_raw: Mapped[str] = mapped_column(String(255), nullable=False)
+    usd_value: Mapped[Decimal | None] = mapped_column(Numeric(20, 2), nullable=True)
+    traced_usd: Mapped[Decimal] = mapped_column(Numeric(20, 2), default=Decimal(0), nullable=False)
+    hop: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="success", nullable=False)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False)
+    evidence_ids: Mapped[list[str] | None] = mapped_column(JSON_TYPE, nullable=True)
+
+    investigation: Mapped["Investigation"] = relationship()

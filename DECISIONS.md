@@ -113,3 +113,43 @@
 - API keys are redacted from logs and exception messages.
 - Stored credentials store a `secret_ref` and a 4-character SHA-256 fingerprint, never the plaintext key.
 - Provider request URLs are sanitized by stripping API key and authentication query parameters before persistence.
+
+---
+
+## 5. Multi-Hop Graph Traversal & Explosion Controls (Phase 4)
+
+### 5.1 Graph Relational Schema & Constraints (PRD §7.5)
+- `graph_nodes`: Stores vertices with composite key `(investigation_id, node_key)` where `node_key = chain:address_lower`. Tracks classification (`node_type`, `address_type`), `vasp_id`, `is_terminal` flag, USD flow totals (`inflow_usd`, `outflow_usd`), and hop depth.
+- `graph_edges`: Stores directed transfers with unique constraint on `(investigation_id, chain, transaction_hash, log_index, trace_id, source_key, destination_key, asset)` to prevent duplicate edges and double-counting during flow analysis (FR-DATA-07).
+- Foreign key cascade on `investigation_id` ensures atomic cleanup on case/investigation deletion.
+
+### 5.2 GraphEngine Protocol & Polyglot Database Abstraction (PRD §7.5, FR-GRAPH-06)
+- Standardized `GraphEngine` async protocol in `app.graph.engine` defining `upsert_node`, `upsert_edge`, `get_node`, `get_neighbors`, `get_paths`, `get_subgraph`, and `get_stats`.
+- `PostgresGraphEngine`: Production relational engine supporting bounded BFS pathfinding and SQL filtering across SQLite and PostgreSQL.
+- `Neo4jGraphEngine`: Architecture stub raising `501 Not Implemented` for P2 graph database evaluation.
+
+### 5.3 Best-First Graph Expansion & Explosion Controls (PRD §8.5, FR-GRAPH-01..05)
+- **Best-First Frontier:** Priority queue prioritizes highest-USD transfers first (`-priority, hop, count, node`).
+- **Terminal Node Stopping Rules:** Nodes classified as `VASP`, `BRIDGE`, `SERVICE` (e.g. mixers), or `CONTRACT` are marked terminal and are **never** expanded further.
+- **Explosion Caps:**
+  - `max_depth` (default 3, range 1-6)
+  - `min_usd_value` (default $100)
+  - `max_tx_per_node` (default 200)
+  - `max_nodes_per_hop` (default 50)
+  - `max_total_nodes` (1500)
+  - `max_total_edges` (10000)
+  - `high_degree_threshold` (1000 counterparties treated as service hub)
+  - `provider_call_budget` (600 requests max)
+- **Per-Hop Truncation Reporting:** Every pruned transfer/node records a `TruncationReport` detailing `hop`, `nodes_dropped`, `edges_dropped`, and `usd_dropped`. Any truncation marks the investigation as `PARTIAL` with reason `graph_truncated` (FR-GRAPH-05).
+
+### 5.4 Chronologically Consistent Pro-Rata Flow Propagation (PRD §8.6, FR-GRAPH-04)
+- **Haircut Model:** All edges are sorted chronologically. Transfers occurring before the first inflow to an intermediary carry strictly \$0 traced USD.
+- **Pro-Rata Propagation:** Outflows are scaled by the running ratio of $\frac{\text{tainted\_balance}}{\text{running\_balance}}$.
+- **Coverage Metrics:** Computes $\text{coverage} = \frac{\text{funds\_reached\_terminal}}{\text{total\_traced\_outflow}}$ and resolves per-VASP candidate fund shares for downstream attribution (Phase 5).
+
+### 5.5 Investigation Lifecycle Orchestration (PRD §8.7, FR-INV-01..07)
+- **State Machine Transitions:** `CREATED` → `VALIDATING` → `FETCHING_DATA` → `TRACING` → `ANALYZING` → `COMPLETED` / `PARTIAL` / `FAILED`.
+- **Concurrent Execution Guard:** State machine enforces strict transitions; attempting to run an active investigation returns HTTP 409 conflict.
+- **Snapshot Hashing (G5, FR-INV-07):** Computes canonical SHA-256 hash (`SNAP-...`) from chain, address, and transaction count for deterministic reruns.
+- **User Cancellation:** `POST /{investigation_id}/cancel` transitions active runs to `FAILED` with audit trail.
+

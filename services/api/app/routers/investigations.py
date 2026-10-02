@@ -1,6 +1,7 @@
+from decimal import Decimal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +12,12 @@ from app.core.validation import validate_wallet_address
 from app.db.models import Case, Investigation, User
 from app.db.session import get_db
 from app.domain.enums import AuditOutcome, InvestigationState
-from app.domain.models import InvestigationCreate, InvestigationRead
+from app.domain.models import (
+    GraphResponse,
+    InvestigationCreate,
+    InvestigationRead,
+    InvestigationStatusResponse,
+)
 
 router = APIRouter(prefix="/investigations", tags=["Investigations"])
 
@@ -111,3 +117,124 @@ async def get_investigation(
         raise NotFoundException("Investigation not found")
 
     return investigation
+
+
+@router.post("/{investigation_id}/run")
+async def run_investigation(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("investigation.run")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Executes multi-hop blockchain tracing, expansion, and flow propagation (FR-INV-01)."""
+    from app.services.orchestrator import InvestigationOrchestrator
+
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv_res = await session.execute(inv_stmt)
+    investigation = inv_res.scalar_one_or_none()
+    if not investigation:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == investigation.case_id, Case.org_id == current_user.org_id)
+    case_res = await session.execute(case_stmt)
+    case = case_res.scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    orchestrator = InvestigationOrchestrator(session)
+    result = await orchestrator.run(investigation_id, user_id=current_user.id)
+    return result
+
+
+@router.get("/{investigation_id}/status", response_model=InvestigationStatusResponse)
+async def get_investigation_status(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("case.read")),
+    session: AsyncSession = Depends(get_db),
+) -> InvestigationStatusResponse:
+    """Returns real-time progress and summary statistics for an investigation (FR-INV-04)."""
+    from app.graph.postgres_engine import PostgresGraphEngine
+
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv_res = await session.execute(inv_stmt)
+    investigation = inv_res.scalar_one_or_none()
+    if not investigation:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == investigation.case_id, Case.org_id == current_user.org_id)
+    case_res = await session.execute(case_stmt)
+    case = case_res.scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    graph_engine = PostgresGraphEngine(session)
+    stats = await graph_engine.get_stats(investigation_id)
+
+    return InvestigationStatusResponse(
+        investigation_id=investigation.id,
+        status=investigation.status,
+        run_no=investigation.run_no,
+        data_snapshot_id=investigation.data_snapshot_id,
+        registry_snapshot_id=investigation.registry_snapshot_id,
+        warnings=investigation.warnings,
+        partial_reasons=investigation.partial_reasons,
+        stats=stats,
+    )
+
+
+@router.get("/{investigation_id}/graph", response_model=GraphResponse)
+async def get_investigation_graph(
+    investigation_id: UUID,
+    min_usd: Decimal | None = Query(None, description="Filter edges by minimum USD amount"),
+    max_hop: int | None = Query(None, description="Filter nodes and edges by maximum hop depth"),
+    current_user: User = Depends(require_permission("graph.view")),
+    session: AsyncSession = Depends(get_db),
+) -> GraphResponse:
+    """Retrieves persisted graph nodes and edges for visualization (FR-GRAPH-07)."""
+    from app.graph.postgres_engine import PostgresGraphEngine
+
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv_res = await session.execute(inv_stmt)
+    investigation = inv_res.scalar_one_or_none()
+    if not investigation:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == investigation.case_id, Case.org_id == current_user.org_id)
+    case_res = await session.execute(case_stmt)
+    case = case_res.scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    graph_engine = PostgresGraphEngine(session)
+    subgraph = await graph_engine.get_subgraph(investigation_id, min_usd=min_usd, max_hop=max_hop)
+
+    return GraphResponse(
+        investigation_id=investigation.id,
+        nodes=subgraph["nodes"],
+        edges=subgraph["edges"],
+    )
+
+
+@router.post("/{investigation_id}/cancel")
+async def cancel_investigation(
+    investigation_id: UUID,
+    current_user: User = Depends(require_permission("investigation.cancel")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Cancels an in-flight investigation (FR-INV-03)."""
+    from app.services.orchestrator import transition_state
+
+    inv_stmt = select(Investigation).where(Investigation.id == investigation_id)
+    inv_res = await session.execute(inv_stmt)
+    investigation = inv_res.scalar_one_or_none()
+    if not investigation:
+        raise NotFoundException("Investigation not found")
+
+    case_stmt = select(Case).where(Case.id == investigation.case_id, Case.org_id == current_user.org_id)
+    case_res = await session.execute(case_stmt)
+    case = case_res.scalar_one_or_none()
+    if not case or not await check_case_authorization(case, current_user, session):
+        raise NotFoundException("Investigation not found")
+
+    await transition_state(session, investigation, InvestigationState.FAILED, user_id=current_user.id, reason="cancelled_by_user")
+    await session.commit()
+    return {"message": "Investigation cancelled successfully", "status": investigation.status}

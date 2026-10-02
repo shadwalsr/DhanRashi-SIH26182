@@ -1,6 +1,6 @@
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -56,6 +56,12 @@ async def log_audit_event(
 
     prev_hash = last_log.hash if last_log else GENESIS_PREV_HASH
     now_utc = datetime.now(UTC)
+    if last_log and last_log.timestamp:
+        last_ts = last_log.timestamp
+        if last_ts.tzinfo is None:
+            last_ts = last_ts.replace(tzinfo=UTC)
+        if now_utc <= last_ts:
+            now_utc = last_ts + timedelta(microseconds=1)
     entry_hash = compute_audit_hash(
         prev_hash=prev_hash,
         user_id=user_id,

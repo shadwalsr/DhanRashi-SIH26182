@@ -109,6 +109,7 @@ class GraphNode(BaseModel):
     outflow_usd: Decimal = Decimal(0)
     first_seen_ts: datetime | None = None
     last_seen_ts: datetime | None = None
+    hop: int = 0
     provenance: ProvenanceRecord | None = None
 
 
@@ -341,4 +342,21 @@ class RegistrySnapshotRead(BaseModel):
 
 class RegistryImportRequest(BaseModel):
     csv_content: str
+
+
+class InvestigationStatusResponse(BaseModel):
+    investigation_id: UUID
+    status: str
+    run_no: int
+    data_snapshot_id: str | None = None
+    registry_snapshot_id: str | None = None
+    warnings: list[str] = Field(default_factory=list)
+    partial_reasons: list[str] = Field(default_factory=list)
+    stats: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphResponse(BaseModel):
+    investigation_id: UUID
+    nodes: list[dict[str, Any]]
+    edges: list[dict[str, Any]]
 
