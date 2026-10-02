@@ -1,0 +1,7 @@
+record_id,address,chain,vasp,vasp_id,address_type,cluster_id,source,source_reference,evidence_type,confidence,first_seen,last_verified,status,jurisdiction,is_synthetic
+REG-BAD-001,0x000000000000000000000000000000000000aa01,ethereum,SynthEx Alpha,,deposit_wallet,CLUSTER-SYN-001,synthetic_demo,REF-001,self_attested,0.9,2025-01-01,2026-08-01,active,IN,true
+REG-BAD-002,0x000000000000000000000000000000000000aa02,cardano,SynthEx Alpha,VASP-SYN-001,hot_wallet,CLUSTER-SYN-001,synthetic_demo,REF-002,vendor_label,0.9,2025-01-01,2026-08-01,active,IN,true
+REG-BAD-003,0x000000000000000000000000000000000000aa03,ethereum,SynthEx Alpha,VASP-SYN-001,unknown_type,CLUSTER-SYN-001,synthetic_demo,REF-003,vendor_label,0.9,2025-01-01,2026-08-01,active,IN,true
+REG-BAD-004,0x000000000000000000000000000000000000aa04,ethereum,SynthEx Alpha,VASP-SYN-001,hot_wallet,CLUSTER-SYN-001,synthetic_demo,REF-004,vendor_label,1.5,2025-01-01,2026-08-01,active,IN,true
+REG-BAD-005,0x000000000000000000000000000000000000aa05,ethereum,SynthEx Alpha,VASP-SYN-001,hot_wallet,CLUSTER-SYN-001,synthetic_demo,REF-005,vendor_label,0.9,2025-01-01,2026-08-01,deleted,IN,true
+REG-BAD-006,0x000000000000000000000000000000000000aa06,ethereum,SynthEx Alpha,VASP-SYN-001,hot_wallet,CLUSTER-SYN-001,synthetic_demo,REF-006,vendor_label,0.9,01/01/2025,2026-08-01,active,IN,true

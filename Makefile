@@ -39,7 +39,8 @@ lint:
 	cd apps/web && npm run lint
 
 import-registry:
-	cd services/api && python -m app.scripts.import_registry $(FILE)
+	@echo "Importing registry from $(FILE)..."
+	cd services/api && .venv/Scripts/python.exe -m app.scripts.import_registry $(FILE)
 
 clean:
 	docker compose down -v

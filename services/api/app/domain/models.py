@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
@@ -196,4 +196,98 @@ class AuditLogRead(BaseModel):
     timestamp: datetime
     prev_hash: str
     hash: str
+
+
+class IntelLabel(BaseModel):
+    chain: Chain
+    address: str
+    vasp_id: str | None = None
+    vasp_name: str | None = None
+    address_type: str  # RegistryAddressType value
+    cluster_id: str | None = None
+    confidence: float
+    source: str
+    source_reference: str
+    evidence_type: str  # RegistryEvidenceType value
+    last_verified: date | None = None
+    provenance_class: str = "THIRD-PARTY INTELLIGENCE"
+    conflict: bool = False
+    staleness_factor: float = 1.0
+
+
+class VaspRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    vasp_id: str
+    name: str
+    jurisdiction: str | None = None
+    is_synthetic: bool
+    created_at: datetime
+
+
+class VaspAddressRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    record_id: str
+    address: str
+    chain: str
+    address_type: str
+    cluster_id: str | None = None
+    source: str
+    source_reference: str
+    evidence_type: str
+    confidence: float
+    first_seen: date
+    last_verified: date
+    status: str
+    conflict: bool
+    staleness_factor: float = 1.0
+    vasp_id: str  # The VASP display vasp_id, not FK UUID
+    vasp_name: str  # VASP display name
+
+
+class VaspAddressCreate(BaseModel):
+    record_id: str
+    address: str
+    chain: Chain
+    vasp_id: str  # refers to Vasp.vasp_id
+    address_type: str
+    cluster_id: str | None = None
+    source: str
+    source_reference: str
+    evidence_type: str
+    confidence: float = Field(ge=0.0, le=1.0)
+    first_seen: date
+    last_verified: date
+    status: str = "active"
+    is_synthetic: bool = True
+
+
+class RegistryLookupResponse(BaseModel):
+    chain: str
+    address: str
+    labels: list[IntelLabel]
+    has_conflict: bool = False
+    cluster_labels: list[IntelLabel] = Field(default_factory=list)
+
+
+class RegistryImportResult(BaseModel):
+    total_rows: int
+    imported: int
+    errors: list[dict[str, Any]]
+    file_hash: str
+
+
+class RegistrySnapshotRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    snapshot_id: str
+    record_count: int
+    snapshot_hash: str
+    created_at: datetime
+
+
+class RegistryImportRequest(BaseModel):
+    csv_content: str
 

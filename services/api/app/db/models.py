@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Optional
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -152,3 +153,70 @@ class AuditLog(Base):
     hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
 
     user: Mapped[Optional["User"]] = relationship()
+
+
+class Vasp(Base, TimestampMixin):
+    __tablename__ = "vasps"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    vasp_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    jurisdiction: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    is_synthetic: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    addresses: Mapped[list["VaspAddress"]] = relationship(back_populates="vasp", cascade="all, delete-orphan")
+    clusters: Mapped[list["VaspCluster"]] = relationship(back_populates="vasp", cascade="all, delete-orphan")
+
+
+class VaspAddress(Base, TimestampMixin):
+    __tablename__ = "vasp_addresses"
+    __table_args__ = (
+        UniqueConstraint("chain", "address", "vasp_id_fk", "valid_to", name="uq_chain_address_vasp_validity"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    record_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    vasp_id_fk: Mapped[uuid.UUID] = mapped_column(ForeignKey("vasps.id"), nullable=False)
+    address: Mapped[str] = mapped_column(String(255), nullable=False)
+    chain: Mapped[str] = mapped_column(String(50), nullable=False)
+    address_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    cluster_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_reference: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    first_seen: Mapped[date] = mapped_column(Date, nullable=False)
+    last_verified: Mapped[date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_synthetic: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    conflict: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    vasp: Mapped["Vasp"] = relationship(back_populates="addresses")
+
+
+class VaspCluster(Base, TimestampMixin):
+    __tablename__ = "vasp_clusters"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    cluster_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    vasp_id_fk: Mapped[uuid.UUID] = mapped_column(ForeignKey("vasps.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_synthetic: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    vasp: Mapped["Vasp"] = relationship(back_populates="clusters")
+
+
+class RegistrySnapshot(Base):
+    __tablename__ = "registry_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    snapshot_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    investigation_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("investigations.id"), nullable=True)
+    record_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

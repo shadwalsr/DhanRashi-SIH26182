@@ -61,6 +61,15 @@ class NotFoundException(VaspTraceException):
         )
 
 
+class AdapterNotConfiguredException(VaspTraceException):
+    def __init__(self, message: str = "Intelligence adapter not configured"):
+        super().__init__(
+            error_code="ADAPTER_NOT_CONFIGURED",
+            message=message,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+
 async def vasp_trace_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     if isinstance(exc, VaspTraceException):
         return JSONResponse(

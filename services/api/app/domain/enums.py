@@ -80,3 +80,33 @@ class UserRole(str, Enum):
 class AuditOutcome(str, Enum):
     ALLOW = "ALLOW"
     DENY = "DENY"
+
+
+class RegistryAddressType(str, Enum):
+    DEPOSIT_WALLET = "deposit_wallet"
+    HOT_WALLET = "hot_wallet"
+    COLD_WALLET = "cold_wallet"
+    EXCHANGE_CLUSTER = "exchange_cluster"
+    CUSTODIAL_WALLET = "custodial_wallet"
+    BRIDGE = "bridge"
+    MIXER = "mixer"
+    PAYMENT_PROCESSOR = "payment_processor"
+    OTHER_SERVICE = "other_service"
+
+
+class RegistryEvidenceType(str, Enum):
+    SELF_ATTESTED = "self_attested"
+    PUBLIC_PROOF_OF_RESERVES = "public_proof_of_reserves"
+    LAW_ENFORCEMENT_CONFIRMED = "law_enforcement_confirmed"
+    VENDOR_LABEL = "vendor_label"
+    HEURISTIC_CLUSTER = "heuristic_cluster"
+    COMMUNITY_LABEL = "community_label"
+    SYNTHETIC_DEMO = "synthetic_demo"
+
+
+class RegistryStatus(str, Enum):
+    ACTIVE = "active"
+    STALE = "stale"
+    DISPUTED = "disputed"
+    SUPERSEDED = "superseded"
+    RETIRED = "retired"

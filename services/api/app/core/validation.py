@@ -54,3 +54,11 @@ def validate_wallet_address(address: str, chain: str) -> str:
         return address
 
     raise UnsupportedChainException(f"Address validation not supported for chain '{chain}'.")
+
+def normalize_address_for_chain(chain: str, address: str) -> str:
+    """Normalizes address based on the blockchain rules."""
+    chain_lower = chain.lower()
+    if chain_lower == Chain.TRON.value:
+        return address
+    return address.lower()
+

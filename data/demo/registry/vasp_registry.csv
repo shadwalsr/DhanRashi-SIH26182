@@ -1,0 +1,17 @@
+record_id,address,chain,vasp,vasp_id,address_type,cluster_id,source,source_reference,evidence_type,confidence,first_seen,last_verified,status,jurisdiction,is_synthetic
+REG-SYN-001,0x000000000000000000000000000000000000aa01,ethereum,SynthEx Alpha,VASP-SYN-001,deposit_wallet,CLUSTER-SYN-001,synthetic_demo,REF-SYN-001,self_attested,0.98,2025-01-01,2026-08-01,active,IN,true
+REG-SYN-002,0x000000000000000000000000000000000000aa02,ethereum,SynthEx Alpha,VASP-SYN-001,hot_wallet,CLUSTER-SYN-001,synthetic_demo,REF-SYN-002,public_proof_of_reserves,0.95,2025-01-01,2026-08-01,active,IN,true
+REG-SYN-003,0x000000000000000000000000000000000000aa03,ethereum,SynthEx Alpha,VASP-SYN-001,cold_wallet,CLUSTER-SYN-001,synthetic_demo,REF-SYN-003,public_proof_of_reserves,0.99,2025-01-01,2026-08-01,active,IN,true
+REG-SYN-004,0x000000000000000000000000000000000000aa04,ethereum,SynthEx Alpha,VASP-SYN-001,exchange_cluster,CLUSTER-SYN-001,synthetic_demo,REF-SYN-004,heuristic_cluster,0.85,2025-01-01,2026-07-15,active,IN,true
+REG-SYN-005,0x000000000000000000000000000000000000bb01,bnb_chain,SynthEx Beta,VASP-SYN-002,hot_wallet,,synthetic_demo,REF-SYN-005,vendor_label,0.90,2025-02-01,2026-07-01,active,SG,true
+REG-SYN-006,0x000000000000000000000000000000000000bb02,polygon,SynthEx Beta,VASP-SYN-002,deposit_wallet,,synthetic_demo,REF-SYN-006,vendor_label,0.92,2025-02-01,2026-07-01,active,SG,true
+REG-SYN-007,0x000000000000000000000000000000000000ee01,ethereum,SynthBridge Global,VASP-SYN-003,bridge,,synthetic_demo,REF-SYN-007,self_attested,0.95,2024-06-01,2026-08-01,active,US,true
+REG-SYN-008,0x000000000000000000000000000000000000dd01,ethereum,SynthMix Protocol,VASP-SYN-004,mixer,,synthetic_demo,REF-SYN-008,law_enforcement_confirmed,0.99,2024-05-01,2026-08-10,active,CH,true
+REG-SYN-009,TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t,tron,SynthPay Solutions,VASP-SYN-005,payment_processor,,synthetic_demo,REF-SYN-009,vendor_label,0.88,2025-01-01,2026-06-01,active,GB,true
+REG-SYN-010,0x000000000000000000000000000000000000ff01,ethereum,SynthCustody Trust,VASP-SYN-006,custodial_wallet,,synthetic_demo,REF-SYN-010,self_attested,0.96,2024-01-01,2026-08-01,active,DE,true
+REG-SYN-011,0x0000000000000000000000000000000000002201,ethereum,SynthDEX Gateway,VASP-SYN-007,other_service,,synthetic_demo,REF-SYN-011,community_label,0.80,2025-03-01,2026-07-01,active,KY,true
+REG-SYN-012,0x000000000000000000000000000000000000cc01,ethereum,SynthEx Alpha,VASP-SYN-001,hot_wallet,,synthetic_demo,REF-SYN-012,vendor_label,0.85,2025-01-01,2026-07-01,active,IN,true
+REG-SYN-013,0x000000000000000000000000000000000000cc01,ethereum,SynthEx Gamma,VASP-SYN-008,hot_wallet,,synthetic_demo,REF-SYN-013,community_label,0.75,2025-04-01,2026-07-01,active,JP,true
+REG-SYN-014,0x0000000000000000000000000000000000001101,polygon,SynthEx Alpha,VASP-SYN-001,hot_wallet,,synthetic_demo,REF-SYN-014,vendor_label,0.80,2023-01-01,2024-01-15,active,IN,true
+REG-SYN-015,T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb,tron,SynthEx Alpha,VASP-SYN-001,deposit_wallet,,synthetic_demo,REF-SYN-015,community_label,0.70,2024-01-01,2026-01-01,disputed,IN,true
+REG-SYN-016,TPYmHEhy5n8TCEfYGqW2rPxsghSfzghPDn,tron,SynthEx Beta,VASP-SYN-002,hot_wallet,,synthetic_demo,REF-SYN-016,vendor_label,0.91,2025-01-01,2026-07-01,active,SG,true
