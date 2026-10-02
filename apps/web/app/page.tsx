@@ -1,200 +1,581 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { CheckCircle2, XCircle, RefreshCw, Server, Shield, Database, Cpu } from "lucide-react";
-
-
-interface HealthData {
-  status: string;
-  service: string;
-  environment: string;
-  demo_mode: boolean;
-  live_mode: boolean;
-}
+import {
+  Case,
+  Investigation,
+  GraphResponse,
+  AttributionResponse,
+  RiskAssessment,
+  UserRole,
+  CandidateAttribution,
+} from "@/lib/types";
+import { api, DEMO_USERS } from "@/lib/api";
+import AuthBar from "@/components/AuthBar";
+import Navigation, { NavTab } from "@/components/Navigation";
+import CytoscapeGraph from "@/components/CytoscapeGraph";
+import InvestigationOverview from "@/components/InvestigationOverview";
+import ExplainAttributionModal from "@/components/ExplainAttributionModal";
+import EvidenceLedger from "@/components/EvidenceLedger";
+import NewInvestigationModal from "@/components/NewInvestigationModal";
+import LiveProgressModal from "@/components/LiveProgressModal";
+import VaspRegistryView from "@/components/VaspRegistryView";
+import SupervisorView from "@/components/SupervisorView";
+import AuditView from "@/components/AuditView";
+import ProviderHealthView from "@/components/ProviderHealthView";
+import {
+  FolderKanban,
+  Play,
+  PlusCircle,
+  RefreshCw,
+  GitFork,
+  Scale,
+  ScrollText,
+  FileCheck,
+  Building2,
+  AlertTriangle,
+  ArrowRight,
+} from "lucide-react";
 
 export default function Home() {
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastChecked, setLastChecked] = useState<string>("");
+  const [role, setRole] = useState<UserRole>("INV");
+  const [currentTab, setCurrentTab] = useState<NavTab>("cases");
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  // Cases & Investigations state
+  const [cases, setCases] = useState<Case[]>([]);
+  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
+  const [investigations, setInvestigations] = useState<Investigation[]>([]);
+  const [activeInvestigationId, setActiveInvestigationId] = useState<string | null>(null);
 
-  const fetchHealth = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Active investigation data
+  const [activeInvestigation, setActiveInvestigation] = useState<Investigation | null>(null);
+  const [graphData, setGraphData] = useState<GraphResponse | null>(null);
+  const [attribution, setAttribution] = useState<AttributionResponse | null>(null);
+  const [risk, setRisk] = useState<RiskAssessment | null>(null);
+  const [loadingGraph, setLoadingGraph] = useState<boolean>(false);
+
+  // Modals state
+  const [showNewInvModal, setShowNewInvModal] = useState<boolean>(false);
+  const [runningInvId, setRunningInvId] = useState<string | null>(null);
+  const [showExplainModal, setShowExplainModal] = useState<boolean>(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<CandidateAttribution | null>(null);
+
+  // New Case modal
+  const [showNewCaseModal, setShowNewCaseModal] = useState<boolean>(false);
+  const [newCaseRef, setNewCaseRef] = useState<string>("");
+  const [newCaseTitle, setNewCaseTitle] = useState<string>("");
+
+  // Initialize Auth
+  useEffect(() => {
+    api.login(role).catch(() => {});
+  }, [role]);
+
+  // Load initial Cases
+  const loadCases = useCallback(async () => {
     try {
-      const res = await fetch(`${apiUrl}/health/live`, { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const casesData = await api.listCases();
+      setCases(casesData);
+      if (casesData.length > 0 && !selectedCaseId) {
+        setSelectedCaseId(casesData[0].id);
       }
-      const data: HealthData = await res.json();
-      setHealth(data);
-      setLastChecked(new Date().toLocaleTimeString());
-    } catch (err: any) {
-      setError(err.message || "Failed to connect to VASP-Trace API");
-      setLastChecked(new Date().toLocaleTimeString());
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load cases:", err);
     }
-  }, [apiUrl]);
+  }, [selectedCaseId]);
 
   useEffect(() => {
-    fetchHealth();
-  }, [fetchHealth]);
+    loadCases();
+  }, [loadCases]);
 
+  // Load Investigations when selectedCaseId changes
+  const loadInvestigations = useCallback(async () => {
+    if (!selectedCaseId) return;
+    try {
+      const invs = await api.listInvestigations(selectedCaseId);
+      setInvestigations(invs);
+      if (invs.length > 0 && !activeInvestigationId) {
+        setActiveInvestigationId(invs[0].id);
+      }
+    } catch (err) {
+      console.error("Failed to load investigations:", err);
+    }
+  }, [selectedCaseId, activeInvestigationId]);
+
+  useEffect(() => {
+    loadInvestigations();
+  }, [loadInvestigations]);
+
+  // Load Investigation Details when activeInvestigationId changes
+  const loadInvestigationDetails = useCallback(async () => {
+    if (!activeInvestigationId) return;
+    setLoadingGraph(true);
+    try {
+      const [inv, graph, attr, riskData] = await Promise.all([
+        api.getInvestigation(activeInvestigationId),
+        api.getInvestigationGraph(activeInvestigationId).catch(() => null),
+        api.getAttribution(activeInvestigationId).catch(() => null),
+        api.getRiskAssessment(activeInvestigationId).catch(() => null),
+      ]);
+      setActiveInvestigation(inv);
+      setGraphData(graph);
+      setAttribution(attr);
+      setRisk(riskData);
+      if (attr?.top_candidate) {
+        setSelectedCandidate(attr.top_candidate);
+      }
+    } catch (err) {
+      console.error("Failed to load investigation details:", err);
+    } finally {
+      setLoadingGraph(false);
+    }
+  }, [activeInvestigationId]);
+
+  useEffect(() => {
+    loadInvestigationDetails();
+  }, [loadInvestigationDetails]);
+
+  const handleCreateCase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCaseRef.trim() || !newCaseTitle.trim()) return;
+    try {
+      const created = await api.createCase({
+        reference_number: newCaseRef.trim(),
+        title: newCaseTitle.trim(),
+      });
+      setShowNewCaseModal(false);
+      setNewCaseRef("");
+      setNewCaseTitle("");
+      await loadCases();
+      setSelectedCaseId(created.id);
+    } catch (err) {
+      console.error("Failed to create case:", err);
+    }
+  };
+
+  const handleRunInvestigation = async (invId: string) => {
+    try {
+      await api.runInvestigation(invId);
+      setRunningInvId(invId);
+    } catch (err) {
+      console.error("Failed to start run:", err);
+    }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10 w-full flex-1 flex flex-col justify-between">
-      <div>
-        {/* Welcome Banner */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                Phase 0 · Foundation & Tooling
-              </span>
-              <h2 className="text-2xl font-bold text-slate-900 mt-3">
-                Automated Attribution of Unknown Cryptocurrency Wallets
-              </h2>
-              <p className="text-slate-600 text-sm mt-1 max-w-2xl">
-                VASP-Trace reconstructs bounded transaction flow graphs and evaluates
-                10-factor explainable attribution models to identify destination VASPs
-                and generate evidence packages for lawful disclosure requests.
-              </p>
-            </div>
-            <button
-              onClick={fetchHealth}
-              disabled={loading}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 transition shadow-sm"
+    <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
+      {/* Role-Aware Auth Bar (Persona Switcher) */}
+      <AuthBar currentRole={role} onRoleChange={(newRole) => setRole(newRole)} />
+
+      {/* Main Navigation Bar */}
+      <Navigation
+        currentTab={currentTab}
+        onTabChange={(tab) => setCurrentTab(tab)}
+        userRole={role}
+        activeInvestigationId={activeInvestigationId}
+      />
+
+      {/* Case & Investigation Selector Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">
+              Active Case:
+            </span>
+            <select
+              value={selectedCaseId}
+              onChange={(e) => {
+                setSelectedCaseId(e.target.value);
+                setActiveInvestigationId(null);
+              }}
+              className="bg-slate-100 border border-slate-200 rounded px-2.5 py-1 text-slate-900 font-semibold"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              Re-check API Health
-            </button>
+              {cases.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.reference_number} · {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">
+              Investigation:
+            </span>
+            <select
+              value={activeInvestigationId || ""}
+              onChange={(e) => setActiveInvestigationId(e.target.value || null)}
+              className="bg-slate-100 border border-slate-200 rounded px-2.5 py-1 text-slate-900 font-mono font-medium max-w-xs truncate"
+            >
+              {investigations.length === 0 && <option value="">No investigations</option>}
+              {investigations.map((inv) => (
+                <option key={inv.id} value={inv.id}>
+                  [{inv.blockchain.toUpperCase()}] {inv.wallet_address.slice(0, 10)}... (
+                  {inv.state})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* API Connection Status Card */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Backend API (/health/live)
-                </span>
-                <Server className="w-4 h-4 text-slate-400" />
-              </div>
-              <div className="flex items-center gap-3">
-                {loading ? (
-                  <div className="flex items-center gap-2 text-slate-500 text-sm">
-                    <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
-                    Connecting to {apiUrl}...
-                  </div>
-                ) : error ? (
-                  <div className="flex items-start gap-2 text-rose-600 text-sm">
-                    <XCircle className="w-5 h-5 flex-shrink-0 text-rose-600 mt-0.5" />
-                    <div>
-                      <p className="font-semibold">Unreachable</p>
-                      <p className="text-xs text-rose-500">{error}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-emerald-600 text-sm">
-                    <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
-                    <span className="font-semibold text-slate-900 text-base">Healthy & Responsive</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-400">
-              <span>Target: {apiUrl}</span>
-              {lastChecked && <span>Checked: {lastChecked}</span>}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Execution Mode
-                </span>
-                <Shield className="w-4 h-4 text-slate-400" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">DEMO_MODE</span>
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    {health?.demo_mode ? "ENABLED (Deterministic)" : "DISABLED"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">LIVE_MODE</span>
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                    {health?.live_mode ? "ACTIVE" : "OFFLINE / SAFE"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400">
-              Environment: <span className="font-mono text-slate-600">{health?.environment || "development"}</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Worker & Queue Subsystem
-                </span>
-                <Cpu className="w-4 h-4 text-slate-400" />
-              </div>
-              <div className="space-y-1.5 text-xs text-slate-600">
-                <div className="flex justify-between">
-                  <span>Celery Queues:</span>
-                  <span className="font-mono font-medium text-slate-800">fetch, trace, analyze, report</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Scheduler:</span>
-                  <span className="font-mono font-medium text-slate-800">Celery Beat heartbeat</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Concurrency:</span>
-                  <span className="font-mono font-medium text-slate-800">4 worker processes</span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400">
-              PostgreSQL 15 + Redis 7 backing
-            </div>
-          </div>
-        </div>
-
-        {/* Phase Checklist Status */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Database className="w-4 h-4 text-blue-600" />
-            Phase 0 Foundation Checklist
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-semibold text-slate-800 block mb-1">1. Monorepo Setup</span>
-              <p className="text-slate-500">apps/web, services/api, data/demo, docker-compose.yml</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-semibold text-slate-800 block mb-1">2. FastAPI Backend</span>
-              <p className="text-slate-500">Pydantic v2 settings, health routes, error envelope, logging</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-semibold text-slate-800 block mb-1">3. Database & Migrations</span>
-              <p className="text-slate-500">SQLAlchemy 2 base, Alembic initial migration generated</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-semibold text-slate-800 block mb-1">4. Worker Queues</span>
-              <p className="text-slate-500">Celery 4-queue architecture, beat scheduler, noop test task</p>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          {["INV", "FIA", "SUP"].includes(role) && (
+            <>
+              <button
+                onClick={() => setShowNewCaseModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold border border-slate-200"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>New Case</span>
+              </button>
+              <button
+                onClick={() => setShowNewInvModal(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-xs"
+              >
+                <Play className="w-3 h-3 fill-current" />
+                <span>New Investigation</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Main View Area */}
+      <div className="p-6 max-w-7xl mx-auto w-full flex-1">
+        {/* Tab 1: Cases & Investigations */}
+        {currentTab === "cases" && (
+          <div className="space-y-6">
+            {/* Active Investigation Card Deck */}
+            {activeInvestigation && (
+              <InvestigationOverview
+                investigation={activeInvestigation}
+                attribution={attribution}
+                risk={risk}
+                onOpenExplain={() => setShowExplainModal(true)}
+              />
+            )}
+
+            {/* Investigations List */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+              <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FolderKanban className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Investigations in this Case ({investigations.length})
+                  </h3>
+                </div>
+              </div>
+
+              {investigations.length === 0 ? (
+                <div className="p-12 text-center text-slate-400 text-xs">
+                  No investigations launched for this case yet. Click &quot;New Investigation&quot; to
+                  start tracing an unknown wallet address.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="p-3">Seed Wallet</th>
+                        <th className="p-3">Blockchain</th>
+                        <th className="p-3">Depth Bound</th>
+                        <th className="p-3">Execution State</th>
+                        <th className="p-3">Nodes / Edges</th>
+                        <th className="p-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {investigations.map((inv) => (
+                        <tr
+                          key={inv.id}
+                          className={`hover:bg-slate-50 transition cursor-pointer ${
+                            activeInvestigationId === inv.id ? "bg-blue-50/40" : ""
+                          }`}
+                          onClick={() => setActiveInvestigationId(inv.id)}
+                        >
+                          <td className="p-3 font-mono font-bold text-slate-900 select-all">
+                            {inv.wallet_address}
+                          </td>
+                          <td className="p-3 capitalize font-semibold text-slate-700">
+                            {inv.blockchain}
+                          </td>
+                          <td className="p-3 font-mono text-slate-600">{inv.depth} hops</td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
+                                inv.state === "COMPLETED"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : inv.state === "PARTIAL"
+                                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                                  : "bg-blue-50 text-blue-700 border-blue-200"
+                              }`}
+                            >
+                              {inv.state}
+                            </span>
+                          </td>
+                          <td className="p-3 font-mono text-slate-500">
+                            {inv.node_count || 0} / {inv.edge_count || 0}
+                          </td>
+                          <td className="p-3 text-right space-x-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveInvestigationId(inv.id);
+                                setCurrentTab("graph");
+                              }}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-semibold"
+                            >
+                              View Graph
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRunInvestigation(inv.id);
+                              }}
+                              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold"
+                            >
+                              Re-Run
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Cytoscape Graph Explorer */}
+        {currentTab === "graph" && (
+          <div className="space-y-4">
+            <CytoscapeGraph graphData={graphData} loading={loadingGraph} />
+          </div>
+        )}
+
+        {/* Tab 3: Attribution Engine & Candidate Comparison */}
+        {currentTab === "attribution" && (
+          <div className="space-y-6">
+            {activeInvestigation && (
+              <InvestigationOverview
+                investigation={activeInvestigation}
+                attribution={attribution}
+                risk={risk}
+                onOpenExplain={() => setShowExplainModal(true)}
+              />
+            )}
+
+            {/* Candidates Comparison Table */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+              <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-purple-600" />
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Candidate VASPs Ranked by 10-Feature Attribution Model
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowExplainModal(true)}
+                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+                >
+                  Explain Attribution (FR-ATT-07)
+                </button>
+              </div>
+
+              {!attribution || attribution.candidates.length === 0 ? (
+                <div className="p-12 text-center text-slate-400 text-xs">
+                  No attributed VASP candidates discovered for this flow path.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="p-3 w-12 text-center">Rank</th>
+                        <th className="p-3">Candidate VASP</th>
+                        <th className="p-3">VASP ID</th>
+                        <th className="p-3 text-right">Raw Score</th>
+                        <th className="p-3 text-right">Final Score</th>
+                        <th className="p-3">Confidence Tier</th>
+                        <th className="p-3">Investigator Disposition</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {attribution.candidates.map((c) => (
+                        <tr key={c.vasp_id} className="hover:bg-slate-50">
+                          <td className="p-3 text-center font-bold text-slate-400">#{c.rank}</td>
+                          <td className="p-3 font-bold text-slate-900">{c.vasp_name}</td>
+                          <td className="p-3 font-mono text-purple-700">{c.vasp_id}</td>
+                          <td className="p-3 font-mono text-right text-slate-500">
+                            {c.raw_score.toFixed(4)}
+                          </td>
+                          <td className="p-3 font-mono text-right font-bold text-slate-900">
+                            {(c.final_score * 100).toFixed(1)}%
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
+                                c.tier === "HIGH"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : c.tier === "MEDIUM"
+                                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                                  : "bg-slate-100 text-slate-700 border-slate-200"
+                              }`}
+                            >
+                              {c.tier}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-mono text-[10px] uppercase font-semibold text-slate-600">
+                              {c.disposition || "pending"}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => {
+                                setSelectedCandidate(c);
+                                setShowExplainModal(true);
+                              }}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-semibold"
+                            >
+                              Decompose
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Evidence Ledger */}
+        {currentTab === "evidence" && activeInvestigationId && (
+          <EvidenceLedger investigationId={activeInvestigationId} />
+        )}
+
+        {/* Tab 5: VASP Registry & Conflicts (Journey J2) */}
+        {currentTab === "registry" && (
+          <VaspRegistryView userRole={role} onRefreshNeeded={loadInvestigationDetails} />
+        )}
+
+        {/* Tab 6: Approvals & SAHYOG Mock (Journey J3) */}
+        {currentTab === "sahyog" && (
+          <SupervisorView
+            userRole={role}
+            currentUserId={DEMO_USERS[role].email}
+            onRefreshNeeded={loadInvestigationDetails}
+          />
+        )}
+
+        {/* Tab 7: Audit Trail & Hash-Chain Verification (Journey J4) */}
+        {currentTab === "audit" && <AuditView userRole={role} />}
+
+        {/* Tab 8: System & Provider Health (Journey J6) */}
+        {currentTab === "health" && <ProviderHealthView />}
+      </div>
+
+      {/* New Investigation Modal */}
+      {showNewInvModal && (
+        <NewInvestigationModal
+          cases={cases}
+          selectedCaseId={selectedCaseId}
+          onClose={() => setShowNewInvModal(false)}
+          onCreated={(inv) => {
+            setActiveInvestigationId(inv.id);
+            setRunningInvId(inv.id);
+            loadInvestigations();
+          }}
+        />
+      )}
+
+      {/* Live Progress Stepper Modal */}
+      {runningInvId && (
+        <LiveProgressModal
+          investigationId={runningInvId}
+          onFinished={(inv) => {
+            setRunningInvId(null);
+            loadInvestigationDetails();
+            loadInvestigations();
+          }}
+          onClose={() => setRunningInvId(null)}
+        />
+      )}
+
+      {/* Explain Attribution Modal */}
+      {showExplainModal && activeInvestigationId && attribution && (
+        <ExplainAttributionModal
+          investigationId={activeInvestigationId}
+          candidates={attribution.candidates}
+          selectedCandidate={selectedCandidate || attribution.top_candidate || null}
+          onSelectCandidate={(c) => setSelectedCandidate(c)}
+          onClose={() => setShowExplainModal(false)}
+          onDispositionUpdated={loadInvestigationDetails}
+        />
+      )}
+
+      {/* New Case Modal */}
+      {showNewCaseModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h3 className="text-sm font-bold text-slate-900">Create New Investigation Case</h3>
+              <button
+                onClick={() => setShowNewCaseModal(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleCreateCase} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Case Reference Number
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={newCaseRef}
+                  onChange={(e) => setNewCaseRef(e.target.value)}
+                  placeholder="e.g. CASE-2026-0042"
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 font-mono"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Case Title
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={newCaseTitle}
+                  onChange={(e) => setNewCaseTitle(e.target.value)}
+                  placeholder="e.g. Operation CrypticFlow - Ransomware Laundering"
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-slate-900"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowNewCaseModal(false)}
+                  className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-xs"
+                >
+                  Create Case
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

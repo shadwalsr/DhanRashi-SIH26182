@@ -266,3 +266,59 @@
 - **Case 5 Acceptance Oracle:**
   - Scenario: Ethereum seed wallet deposits $5,000 USDC into Demo Bridge $\to$ bridge pays out $4,990 USDC on Polygon to intermediary $\to$ intermediary deposits funds into Kraken.
   - Verified: Produces exactly **1** `CrossChainEvent` (`BRIDGE-DEMO-001`), tags downstream edge, and ranks Kraken as top candidate with active `cross_chain_evidence` factor.
+
+---
+
+## 9. Frontend Architecture & User Journeys (Phase 8)
+
+### 9.1 Multi-Persona Role Switcher & Role-Aware Navigation (PRD §4.1, §4.2, Task 1)
+- **Role-Aware Navigation & Quick Switcher (`AuthBar`):**
+  - Instant persona switcher supporting all 6 PRD roles (`INV`, `FIA`, `SUP`, `AUD`, `ADM`, `RO`).
+  - Pre-seeded credential profiles (`DEMO_USERS`) allow zero-friction testing of RBAC restrictions and supervisor reviews.
+  - Scoped UI permissions disable or hide unauthorized tabs (e.g., registry curation restricted to `FIA`/`ADM`, report approvals restricted to `SUP`, audit ledger prioritized for `AUD`).
+
+### 9.2 Interactive Graph Visualization with Cytoscape.js (PRD §5 J1, Task 6)
+- **Visual Encoding:**
+  - Distinct node colorings and shapes: Seed wallet (`#1d4ed8`), VASP terminal node (`#7c3aed` with halo), Bridge contract (`#0891b2` round rectangle), Mixer (`#e11d48` octagon), Cluster (`#0d9488` diamond), and transit Wallets (`#64748b`).
+  - Cross-chain bridge edges rendered with dashed cyan lines and tagged with `via_cross_chain_event_id`.
+  - Edge stroke thickness dynamically scaled to transfer USD amount.
+- **Risk Signals Overlay Toggle:**
+  - One-click toggle overlays high-risk red halos on nodes and edges flagged by the independent risk engine (mixer hops, peel chains, rapid hops).
+- **Element Inspector & Filters (FR-EVD-04):**
+  - Clicking any node or edge opens an inspector drawer displaying exact transaction hashes, block numbers, amounts, and direct links to associated evidence IDs.
+  - Interactive toolbar supports filtering by blockchain, minimum USD value, hop depth, and layouts (`breadthfirst`, `concentric`, `cose`), with full-canvas PNG export.
+
+### 9.3 Four-Card Overview & Epistemic Limitations (PRD §10.3, §10.4, Task 5)
+- **Four Distinct Metric Cards:**
+  1. **Top Candidate VASP:** Entity name, VASP ID, jurisdiction, score, and competing candidates warning badge.
+  2. **Attribution Tier:** Multi-factor confidence tier (`HIGH`, `MEDIUM`, `LOW`, `INSUFFICIENT`).
+  3. **Independent Risk Tier:** Numerical laundering score (0–100) and risk tier (`LOW`, `MEDIUM`, `HIGH`, `SEVERE`) evaluating the transit trail, strictly neutral towards regulated VASPs (FR-RISK-04).
+  4. **Graph Coverage:** Depth traversed, node/edge counts, and execution status (`COMPLETED` vs `PARTIAL`).
+- **Investigative Lead Disclaimer:**
+  - Persistent amber warning emphasizing that attribution scores are mathematical correlations over public graph topologies and not legal proof of guilt. Scores under 0.40 are flagged as inadmissible for sole statutory disclosure.
+
+### 9.4 "Explain Attribution" Drawer with G2 Proof (PRD §11, FR-ATT-07, Task 7)
+- **Feature Decomposition Table:**
+  - Detailed breakdown of all 10 features: raw values, normalized scores (0.00–1.00), dynamic weights, and individual feature contributions.
+  - Mathematical G2 verification badge confirming $\sum \text{contributions} == \text{raw\_score} \pm 0.001$.
+- **Attribution Caps (CAP-01..08):**
+  - Highlights all active cap rules, maximum allowed score ceiling, and contextual reason.
+  - Epistemic limitations list explaining payment processors and hot wallet caveats.
+- **Human-in-the-Loop Disposition (FR-ATT-09):**
+  - Allows investigators to record review decisions (`accepted`, `rejected`, `needs_review`) and subpoena justification notes. Stored immutably as `INFERENCE` in the evidence ledger without modifying the raw mathematical score.
+
+### 9.5 Evidence Ledger & Hash Chain Verification (PRD §13, FR-EVD-01..04, Task 8)
+- **Epistemic Provenance Badging:**
+  - Every fact displays an explicit provenance badge: `OBSERVED` (green), `THIRD-PARTY INTELLIGENCE` (blue), `DERIVED` (purple), `INFERENCE` (amber).
+- **Cryptographic Tamper Verification:**
+  - "Verify Hash Chain" button executes verification over the hash-chained sequence ($H_i = \text{SHA256}(H_{i-1} \mathbin{\Vert} \text{payload})$).
+- **Append-Only Analyst Notes:**
+  - In-app modal allows investigators to append signed notes chained into the ledger.
+
+### 9.6 End-to-End User Journeys (Journeys J1 through J6)
+- **J1 (Investigator Primary Flow):** New investigation with instant client-side format checks $\to$ live progress stepper $\to$ Cytoscape graph exploration $\to$ explain attribution $\to$ disposition recording.
+- **J2 (Analyst Label Conflict Resolution):** Dedicated tab for conflicting or stale VASP records with formal supersede/dispute workflow.
+- **J3 (Supervisor Oversight & SAHYOG Pipeline):** Mandatory "MOCK" banner, separation of duties validation (report creator cannot approve own report), and mock SAHYOG request tracking (`SUBMITTED` $\to$ `ACKNOWLEDGED`).
+- **J4 (Auditor Process Integrity):** Filterable audit log with one-click hash-chain integrity verification and CSV export.
+- **J5 (Partial Graph Handling):** Live stepper and cards handle `PARTIAL` state with explicit truncation warnings and CAP-06 flagging.
+- **J6 (System & Provider Telemetry):** Live status of blockchain providers, token bucket rate limits, and circuit breaker states.
