@@ -322,3 +322,51 @@
 - **J4 (Auditor Process Integrity):** Filterable audit log with one-click hash-chain integrity verification and CSV export.
 - **J5 (Partial Graph Handling):** Live stepper and cards handle `PARTIAL` state with explicit truncation warnings and CAP-06 flagging.
 - **J6 (System & Provider Telemetry):** Live status of blockchain providers, token bucket rate limits, and circuit breaker states.
+
+---
+
+## 10. Reports, SAHYOG Mock, and Narrative Reporting (Phase 9)
+
+### 10.1 Multi-Page PDF Report Generator (FR-RPT-01, FR-RPT-03)
+- **Multi-Page PDF Generation (`generate_investigation_pdf`):** ReportLab PDF engine compiling all 11 required sections:
+  1. Executive Summary & Case Overview
+  2. Investigation Scope & Seed Details
+  3. Attribution Summary & Tier Breakdown
+  4. Top Candidate VASP & Explainability Matrix
+  5. Multi-Hop Graph Topology & Pruning Metrics
+  6. Independent Risk Signals & Transit Trail
+  7. Cross-Chain Events & Bridge Matches
+  8. Cryptographic Evidence Ledger & Provenance Badges
+  9. Epistemic Limitations & Disclaimers
+  10. Draft Statutory Request & Nodal Profile
+  11. Immutable Audit Trail Log
+- **SHA-256 Digest & Header:** Computes deterministic SHA-256 digest of PDF bytes, stores hash in `reports.pdf_hash`, and returns `X-Report-SHA256` HTTP header on download.
+- **Mandatory Limitations & Disclaimers (FR-RPT-03):** Disclaimers and score bounds are hardcoded into PDF templates and report data structures, preventing omission or disablement.
+
+### 10.2 Automated Epistemic Fact Labeling Invariant (FR-RPT-02)
+- **Fact Provenance Validation:** Every evidence row embedded within the report data payload must carry an explicit `provenance_class` (`OBSERVED`, `THIRD-PARTY INTELLIGENCE`, `DERIVED`, `INFERENCE`).
+- **Invariant Enforcement:** `ReportEngine` scans all evidence records prior to report creation; unlabeled or invalid fact rows raise `ValueError("FR-RPT-02 violation")`, preventing unverified facts from entering reports.
+
+### 10.3 Supervisory Approval & Separation of Duties (FR-RPT-04, PRD §5 J3)
+- **Supervisory Approval Workflow:** Created reports start in `PENDING_APPROVAL` status. Supervisors (`SUP` role) review and approve reports via `/api/v1/reports/{id}/approve`.
+- **Separation of Duties Invariant:** Asserts `report.created_by != approver.id`. An author attempting to approve their own report raises `PermissionDeniedException` (HTTP 403).
+
+### 10.4 SAHYOG Provider Interface & Mock Implementation (FR-SAH-01..05)
+- **Pluggable Provider Interface (`SahyogProvider` Protocol):** Standardizes 7 statutory operations:
+  1. `create_disclosure_request` (Section 91 CrPC / Section 94 BNSS)
+  2. `create_freeze_request` (Section 102 CrPC / Section 106 BNSS)
+  3. `get_request_status`
+  4. `list_requests`
+  5. `upload_attachment` (SHA-256 hash integrity check)
+  6. `cancel_request`
+  7. `get_vasp_compliance_info` (Nodal officer details & SLAs)
+- **Completeness Builder (`SahyogRequestBuilder`):** Incomplete requests persist as `DRAFT` status with a populated `validation_errors` list. Complete requests validate clean.
+- **Submission State Machine & Separation of Duties:** Submitting a request (`DRAFT` $\to$ `SUBMITTED` $\to$ `ACKNOWLEDGED`) requires:
+  - Associated report status is `APPROVED`.
+  - Submitter is distinct from drafter (`drafted_by != submitter.id`).
+  - Automatically generates mock acknowledgement tracking ticket and status history timeline.
+
+### 10.5 Deterministic Template Narrative & LLM Grounding Validator (FR-AI-01, FR-AI-02, LLM-03)
+- **Deterministic Narrative Generator (FR-AI-02):** Generates structured, rule-based investigative prose without third-party LLM dependencies.
+- **Grounding & Hallucination Validator (`validate_llm_grounding`, FR-AI-01):** Validates narratives against source investigation payloads, verifying that all referenced wallet addresses, transaction hashes, VASP identifiers, and numerical scores are grounded in factual evidence data. Unrecognized entities fail validation with explicit hallucination errors.
+

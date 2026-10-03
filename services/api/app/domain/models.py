@@ -548,5 +548,120 @@ class CrossChainDetectionResponse(BaseModel):
     summary: str
 
 
+# -----------------------------------------------------------------------------
+# Reports & SAHYOG Schemas (Phase 9: FR-RPT-01..04, FR-SAH-01..05, FR-AI-01..02)
+# -----------------------------------------------------------------------------
+
+
+class FactRow(BaseModel):
+    fact_id: str
+    category: str
+    description: str
+    value: Any
+    provenance_class: Literal["OBSERVED", "THIRD-PARTY INTELLIGENCE", "DERIVED", "INFERENCE"]
+    source_ref: str | None = None
+
+
+class ReportCreate(BaseModel):
+    case_id: UUID
+    investigation_id: UUID
+    title: str
+
+
+class ReportApprovalRequest(BaseModel):
+    comment: str
+
+
+class ReportRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    case_id: UUID
+    investigation_id: UUID
+    title: str
+    status: str
+    pdf_hash: str | None = None
+    pdf_path: str | None = None
+    data_payload: dict[str, Any] = Field(default_factory=dict)
+    limitations: list[str] = Field(default_factory=list)
+    narrative: str | None = None
+    created_by: UUID
+    approved_by: UUID | None = None
+    approval_comment: str | None = None
+    approved_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class SahyogRequestCreate(BaseModel):
+    case_id: UUID
+    investigation_id: UUID
+    report_id: UUID
+    target_vasp_id: str
+    target_vasp_name: str
+    target_wallet_address: str
+    reason: str
+    statutory_basis: str = "Section 91 CrPC / Section 94 BNSS"
+    officer_name: str
+    officer_designation: str = "Superintendent of Police / Lead Investigator"
+    request_type: str = "disclosure"  # disclosure, freeze
+
+
+class SahyogSubmitRequest(BaseModel):
+    comment: str | None = None
+
+
+class SahyogStatusHistoryRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    request_id: UUID
+    from_status: str
+    to_status: str
+    changed_by: UUID | None = None
+    comment: str | None = None
+    timestamp: datetime
+
+
+class SahyogRequestRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    case_id: UUID
+    investigation_id: UUID
+    report_id: UUID
+    reference_number: str
+    target_vasp_id: str
+    target_vasp_name: str
+    target_wallet_address: str
+    reason: str
+    statutory_basis: str
+    officer_name: str
+    officer_designation: str
+    request_type: str
+    status: str
+    is_mock: bool = True
+    attachments: list[dict[str, Any]] = Field(default_factory=list)
+    validation_errors: list[str] = Field(default_factory=list)
+    drafted_by: UUID
+    submitted_by: UUID | None = None
+    submitted_at: datetime | None = None
+    acknowledged_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class VaspComplianceInfo(BaseModel):
+    vasp_id: str
+    name: str
+    jurisdiction: str
+    nodal_officer_email: str
+    grievance_officer: str
+    physical_address: str
+    supported_requests: list[str] = Field(default_factory=list)
+    response_sla_hours: int = 48
+
+
+
 
 

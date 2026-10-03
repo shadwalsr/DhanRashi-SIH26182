@@ -425,3 +425,84 @@ class CrossChainEventModel(Base, TimestampMixin):
     investigation: Mapped["Investigation"] = relationship()
 
 
+class ReportModel(Base, TimestampMixin):
+    __tablename__ = "reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    investigation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("investigations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="PENDING_APPROVAL", nullable=False)  # DRAFT, PENDING_APPROVAL, APPROVED, REJECTED
+    pdf_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    pdf_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    data_payload: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+    limitations: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
+    narrative: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    approval_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    case: Mapped["Case"] = relationship()
+    investigation: Mapped["Investigation"] = relationship()
+    creator: Mapped["User"] = relationship(foreign_keys=[created_by])
+    approver: Mapped["User"] = relationship(foreign_keys=[approved_by])
+
+
+class SahyogRequestModel(Base, TimestampMixin):
+    __tablename__ = "sahyog_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    investigation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("investigations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    report_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("reports.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    reference_number: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    target_vasp_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    target_vasp_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_wallet_address: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    statutory_basis: Mapped[str] = mapped_column(String(255), default="Section 91 CrPC / Section 94 BNSS", nullable=False)
+    officer_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    officer_designation: Mapped[str] = mapped_column(String(255), default="Superintendent of Police / Lead Investigator", nullable=False)
+    request_type: Mapped[str] = mapped_column(String(50), default="disclosure", nullable=False)  # disclosure, freeze
+    status: Mapped[str] = mapped_column(String(50), default="DRAFT", nullable=False)  # DRAFT, SUBMITTED, ACKNOWLEDGED, COMPLETED, REJECTED
+    is_mock: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    attachments: Mapped[list[dict[str, Any]]] = mapped_column(JSON_TYPE, default=list, nullable=False)
+    validation_errors: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
+    drafted_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    submitted_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    case: Mapped["Case"] = relationship()
+    investigation: Mapped["Investigation"] = relationship()
+    report: Mapped["ReportModel"] = relationship()
+    drafter: Mapped["User"] = relationship(foreign_keys=[drafted_by])
+    submitter: Mapped["User"] = relationship(foreign_keys=[submitted_by])
+
+
+class SahyogStatusHistoryModel(Base):
+    __tablename__ = "sahyog_status_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("sahyog_requests.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    from_status: Mapped[str] = mapped_column(String(50), nullable=False)
+    to_status: Mapped[str] = mapped_column(String(50), nullable=False)
+    changed_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+

@@ -61,6 +61,16 @@ class NotFoundException(VaspTraceException):
         )
 
 
+class PermissionDeniedException(VaspTraceException):
+    def __init__(self, message: str = "Permission denied", details: dict[str, Any] | None = None):
+        super().__init__(
+            error_code="PERMISSION_DENIED",
+            message=message,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
 class AdapterNotConfiguredException(VaspTraceException):
     def __init__(self, message: str = "Intelligence adapter not configured"):
         super().__init__(
