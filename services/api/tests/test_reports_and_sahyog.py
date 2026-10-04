@@ -1,11 +1,9 @@
 import hashlib
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import PermissionDeniedException
@@ -13,16 +11,10 @@ from app.core.security import create_access_token
 from app.db.models import (
     AttributionResultModel,
     Case,
-    CrossChainEventModel,
     EvidenceModel,
-    GraphEdgeModel,
-    GraphNodeModel,
     Investigation,
     ReportModel,
-    RiskAssessmentModel,
-    SahyogRequestModel,
     User,
-    Vasp,
 )
 from app.domain.enums import UserRole
 from app.reports.engine import ReportEngine
@@ -32,7 +24,6 @@ from app.reports.narrative import (
     validate_llm_grounding,
 )
 from app.reports.pdf import generate_investigation_pdf
-from app.sahyog.builder import SahyogRequestBuilder
 from app.sahyog.mock import MockSahyogProvider
 
 

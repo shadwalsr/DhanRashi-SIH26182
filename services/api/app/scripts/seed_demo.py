@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 from sqlalchemy import select
@@ -119,7 +119,7 @@ async def seed_data(engine=None):
             async with test_engine.connect() as conn:
                 await conn.execute(select(1))
             engine = test_engine
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning("Local PostgreSQL connection failed (%s). Seeding to SQLite fallback database.", e)
             engine = create_async_engine("sqlite+aiosqlite:///vasp_trace_demo.db", echo=False)
 

@@ -2,7 +2,12 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 from sqlalchemy import Engine, create_engine
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from app.core.config import settings
 
@@ -20,7 +25,7 @@ def get_async_engine() -> AsyncEngine:
                 echo=False,
                 future=True,
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             _async_engine = create_async_engine(
                 "sqlite+aiosqlite:///:memory:",
                 echo=False,
@@ -51,7 +56,7 @@ def get_sync_engine() -> Engine:
                 echo=False,
                 future=True,
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             _sync_engine = create_engine(
                 "sqlite:///:memory:",
                 echo=False,

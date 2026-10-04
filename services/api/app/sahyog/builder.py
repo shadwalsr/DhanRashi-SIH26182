@@ -1,8 +1,6 @@
 """SAHYOG Request Builder with statutory completeness validation (FR-SAH-02)."""
 
 from typing import Any
-from uuid import UUID
-
 
 MANDATORY_FIELDS = [
     ("case_id", "Case identifier is required"),

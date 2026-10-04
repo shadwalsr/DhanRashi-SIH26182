@@ -6,7 +6,6 @@ from typing import Any
 
 class LLMValidationError(Exception):
     """Raised when LLM-generated narrative contains hallucinated entities, addresses, or hashes."""
-    pass
 
 
 def generate_template_narrative(context: dict[str, Any]) -> str:
@@ -38,19 +37,23 @@ def generate_template_narrative(context: dict[str, Any]) -> str:
 
     # Section 1: Executive Summary
     lines = [
-        f"EXECUTIVE INVESTIGATION NARRATIVE",
+        "EXECUTIVE INVESTIGATION NARRATIVE",
         f"Case Reference: {case_ref} · Title: {case_title}",
         f"Generated: {created_at} UTC",
         "",
-        f"1. OVERVIEW & TARGET IDENTIFICATION",
-        f"An investigation was initiated on seed wallet {seed_wallet} on the {chain} network. "
-        f"Automated graph tracing reconstructed a transaction flow topology spanning {total_nodes} nodes "
-        f"and {total_edges} transfer edges, tracking cumulative funds of ${traced_usd} USD.",
+        "1. OVERVIEW & TARGET IDENTIFICATION",
+        (
+            f"An investigation was initiated on seed wallet {seed_wallet} on the {chain} network. "
+            f"Automated graph tracing reconstructed a transaction flow topology spanning {total_nodes} nodes "
+            f"and {total_edges} transfer edges, tracking cumulative funds of ${traced_usd} USD."
+        ),
         "",
-        f"2. ENTITY ATTRIBUTION FINDINGS (FR-ATT-01..09)",
-        f"The multi-factor explainable attribution engine evaluated candidate destinations against the VASP intelligence registry. "
-        f"The primary attributed Virtual Asset Service Provider is {top_vasp_name} ({top_vasp_id}) with an overall attribution "
-        f"score of {final_score:.1%} (Confidence Tier: {tier}).",
+        "2. ENTITY ATTRIBUTION FINDINGS (FR-ATT-01..09)",
+        (
+            f"The multi-factor explainable attribution engine evaluated candidate destinations against the VASP intelligence registry. "
+            f"The primary attributed Virtual Asset Service Provider is {top_vasp_name} ({top_vasp_id}) with an overall attribution "
+            f"score of {final_score:.1%} (Confidence Tier: {tier})."
+        ),
         f"Prior to deterministic cap evaluation, the raw mathematical correlation score was {raw_score:.4f}.",
     ]
 
@@ -66,9 +69,11 @@ def generate_template_narrative(context: dict[str, Any]) -> str:
     # Section 3: Transit Laundering Risk Assessment
     lines.extend([
         "",
-        f"3. INDEPENDENT TRANSIT RISK ASSESSMENT (FR-RISK-01..04)",
-        f"Independent of entity attribution (AT-12 invariant), transit fund laundering indicators were evaluated along the flow trail. "
-        f"Overall Transit Risk Score: {risk_score}/100 (Risk Tier: {risk_tier}).",
+        "3. INDEPENDENT TRANSIT RISK ASSESSMENT (FR-RISK-01..04)",
+        (
+            f"Independent of entity attribution (AT-12 invariant), transit fund laundering indicators were evaluated along the flow trail. "
+            f"Overall Transit Risk Score: {risk_score}/100 (Risk Tier: {risk_tier})."
+        ),
     ])
 
     if triggered_signals:
@@ -87,7 +92,7 @@ def generate_template_narrative(context: dict[str, Any]) -> str:
     if cross_chain_events:
         lines.extend([
             "",
-            f"4. CROSS-CHAIN BRIDGE ACTIVITY (FR-XCH-01..05)",
+            "4. CROSS-CHAIN BRIDGE ACTIVITY (FR-XCH-01..05)",
             f"Detected {len(cross_chain_events)} cross-chain bridge interaction(s):",
         ])
         for ev in cross_chain_events:
@@ -100,9 +105,11 @@ def generate_template_narrative(context: dict[str, Any]) -> str:
     lines.extend([
         "",
         "5. MANDATORY LIMITATIONS & STATUTORY DISCLAIMER (FR-RPT-03)",
-        "Attribution results represent algorithmic inferences based on public distributed ledger data, "
-        "heuristic clustering, and curated entity databases. This document serves as an investigative lead "
-        "and does not constitute conclusive legal proof of wallet ownership or unlawful activity.",
+        (
+            "Attribution results represent algorithmic inferences based on public distributed ledger data, "
+            "heuristic clustering, and curated entity databases. This document serves as an investigative lead "
+            "and does not constitute conclusive legal proof of wallet ownership or unlawful activity."
+        ),
     ])
 
     if limitations:

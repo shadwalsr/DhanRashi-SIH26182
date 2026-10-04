@@ -23,7 +23,6 @@ from app.db.models import (
     User,
 )
 from app.domain.enums import AuditOutcome
-from app.domain.models import ReportRead
 from app.reports.narrative import generate_template_narrative
 from app.reports.pdf import generate_investigation_pdf
 
@@ -202,7 +201,10 @@ class ReportEngine:
             "limitations": limitations,
             "risk_score": risk_dict["risk_score"],
             "risk_tier": risk_dict["risk_tier"],
-            "triggered_signals": [s for s in risk_dict["signals"] if s.get("triggered")],
+            "triggered_signals": [
+                s for s in (risk_dict["signals"] if isinstance(risk_dict["signals"], list) else [])
+                if isinstance(s, dict) and s.get("triggered")
+            ],
             "cross_chain_events": xchain_list,
             "traced_usd": report_data["traced_usd"],
             "total_nodes": len(nodes),
@@ -210,7 +212,7 @@ class ReportEngine:
         })
 
         # 9. Generate PDF & compute SHA-256 Checksum (FR-RPT-01)
-        pdf_bytes, pdf_hash = generate_investigation_pdf(report_data)
+        _pdf_bytes, pdf_hash = generate_investigation_pdf(report_data)
 
         # 10. Persist ReportModel
         report = ReportModel(
@@ -288,7 +290,7 @@ class ReportEngine:
         data = dict(report.data_payload)
         data["status"] = "APPROVED"
         data["approved_by_email"] = approver.email
-        pdf_bytes, new_pdf_hash = generate_investigation_pdf(data)
+        _pdf_bytes, new_pdf_hash = generate_investigation_pdf(data)
         report.pdf_hash = new_pdf_hash
         report.data_payload = data
 

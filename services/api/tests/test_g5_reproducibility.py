@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from app.attribution.weights import DEFAULT_WEIGHTS, renormalize_weights

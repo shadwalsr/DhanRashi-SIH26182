@@ -1,9 +1,8 @@
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 
-from app.attribution.engine import AttributionEngine
 from app.attribution.weights import DEFAULT_WEIGHTS, renormalize_weights
 from app.core.audit import log_audit_event, verify_audit_chain
 from app.core.errors import (
@@ -327,7 +326,8 @@ async def test_failure_matrix_row_11_competing_candidates_flag():
 @pytest.mark.asyncio
 async def test_failure_matrix_row_12_stale_label_cap_07():
     """Row 12: VASP address older than 180 days unconfirmed applies CAP-07 capping score to 0.65 (MEDIUM)."""
-    stale_date = date.today() - timedelta(days=200)
+    today_date = datetime.now(tz=UTC).date()
+    stale_date = today_date - timedelta(days=200)
     v_addr = VaspAddress(
         record_id="REC-STALE-001",
         vasp_id_fk=uuid4(),
@@ -343,5 +343,5 @@ async def test_failure_matrix_row_12_stale_label_cap_07():
         status="active",
     )
 
-    age_days = (date.today() - v_addr.last_verified).days
+    age_days = (today_date - v_addr.last_verified).days
     assert age_days > 180
