@@ -1,34 +1,24 @@
 {
-  "transfers": [
+  "transfers": [],
+  "token_transfers": [
     {
       "chain": "polygon",
-      "transaction_hash": "SYN-TX-POL-001",
-      "log_index": null,
+      "transaction_hash": "SYN-TX-POLY-C5-001",
+      "log_index": 0,
       "trace_id": null,
       "block_number": 52000001,
-      "timestamp": "2026-08-01T10:00:00Z",
-      "source": "0x0000000000000000000000000000000000001101",
-      "destination": "0x000000000000000000000000000000000000bb02",
-      "asset": "POL",
-      "token_contract": null,
-      "amount": "1000.0",
-      "amount_raw": "1000000000000000000000",
-      "usd_value": "500.00",
-      "transaction_type": "native",
+      "timestamp": "2024-01-15T17:45:00Z",
+      "source": "0x7777777777777777777777777777777777770001",
+      "destination": "0x8888888888888888888888888888888888880001",
+      "asset": "USDC",
+      "token_contract": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "amount": "14850.0",
+      "amount_raw": "14850000000",
+      "usd_value": "14850.00",
+      "transaction_type": "token",
       "provider": "fixture:polygon",
       "status": "success"
     }
   ],
-  "token_transfers": [],
-  "balances": {
-    "0x0000000000000000000000000000000000001101": [
-      {
-        "chain": "polygon",
-        "address": "0x0000000000000000000000000000000000001101",
-        "asset": "POL",
-        "amount": "5000.0",
-        "usd_value": "2500.00"
-      }
-    ]
-  }
+  "balances": {}
 }

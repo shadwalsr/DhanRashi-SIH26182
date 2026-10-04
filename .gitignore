@@ -33,6 +33,7 @@ wheels/
 .env*.local
 !.env.example
 !.env.test
+*.db
 
 
 # Node / Next.js

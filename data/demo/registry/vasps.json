@@ -1,0 +1,214 @@
+{
+  "vasps": [
+    {
+      "vasp_id": "VASP-BINANCE",
+      "name": "Binance",
+      "jurisdiction": "MT",
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-BIN-001",
+          "address": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0001",
+          "chain": "ethereum",
+          "address_type": "deposit",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 0.98,
+          "first_seen": "2024-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        }
+      ]
+    },
+    {
+      "vasp_id": "VASP-KRAKEN",
+      "name": "Kraken",
+      "jurisdiction": "US",
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-KRK-001",
+          "address": "0xffffffffffffffffffffffffffffffffff000001",
+          "chain": "ethereum",
+          "address_type": "deposit",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 0.95,
+          "first_seen": "2024-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        }
+      ]
+    },
+    {
+      "vasp_id": "VASP-COINBASE",
+      "name": "Coinbase",
+      "jurisdiction": "US",
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-CB-001",
+          "address": "0xcccccccccccccccccccccccccccccccccccc0001",
+          "chain": "ethereum",
+          "address_type": "deposit",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 0.97,
+          "first_seen": "2024-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        }
+      ]
+    },
+    {
+      "vasp_id": "VASP-OKEX",
+      "name": "OKX",
+      "jurisdiction": "SC",
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-OKX-001",
+          "address": "0x1111111111111111111111111111111111110001",
+          "chain": "ethereum",
+          "address_type": "hot_wallet",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 0.85,
+          "first_seen": "2024-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active",
+          "conflict": true
+        }
+      ]
+    },
+    {
+      "vasp_id": "VASP-HUOBI",
+      "name": "HTX (Huobi)",
+      "jurisdiction": "SC",
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-HUO-001",
+          "address": "0x5555555555555555555555555555555555550001",
+          "chain": "ethereum",
+          "address_type": "deposit",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 0.92,
+          "first_seen": "2024-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        },
+        {
+          "record_id": "REC-HUO-002",
+          "address": "0x1111111111111111111111111111111111110001",
+          "chain": "ethereum",
+          "address_type": "hot_wallet",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024-CONFLICT",
+          "evidence_type": "vendor_label",
+          "confidence": 0.72,
+          "first_seen": "2024-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active",
+          "conflict": true
+        }
+      ]
+    },
+    {
+      "vasp_id": "VASP-TORNADO-MIXER",
+      "name": "Tornado Cash (Mixer)",
+      "jurisdiction": null,
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-MIX-001",
+          "address": "0x2222222222222222222222222222222222220001",
+          "chain": "ethereum",
+          "address_type": "mixer",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 0.99,
+          "first_seen": "2023-06-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        }
+      ]
+    },
+    {
+      "vasp_id": "VASP-POLYGON-DEX",
+      "name": "QuickSwap (Polygon DEX)",
+      "jurisdiction": null,
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-PDEX-001",
+          "address": "0x8888888888888888888888888888888888880001",
+          "chain": "polygon",
+          "address_type": "deposit",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 0.90,
+          "first_seen": "2024-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        }
+      ]
+    },
+    {
+      "vasp_id": "DEMO-BRIDGE-001",
+      "name": "Demo Cross-Chain Bridge",
+      "jurisdiction": null,
+      "is_synthetic": true,
+      "addresses": [
+        {
+          "record_id": "REC-BRG-ETH-001",
+          "address": "0x6666666666666666666666666666666666660001",
+          "chain": "ethereum",
+          "address_type": "bridge",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 1.00,
+          "first_seen": "2023-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        },
+        {
+          "record_id": "REC-BRG-POLY-001",
+          "address": "0x7777777777777777777777777777777777770001",
+          "chain": "polygon",
+          "address_type": "bridge",
+          "source": "synthetic_demo",
+          "source_reference": "SIH-DEMO-2024",
+          "evidence_type": "synthetic_demo",
+          "confidence": 1.00,
+          "first_seen": "2023-01-01",
+          "last_verified": "2024-01-15",
+          "status": "active"
+        }
+      ]
+    }
+  ],
+  "bridge_registry": [
+    {
+      "bridge_id": "BRIDGE-DEMO-001",
+      "name": "Demo Cross-Chain Bridge (ETH→Polygon)",
+      "source_chain": "ethereum",
+      "destination_chain": "polygon",
+      "source_contract_address": "0x6666666666666666666666666666666666660001",
+      "destination_contract_address": "0x7777777777777777777777777777777777770001",
+      "event_abi_signature": "BridgeDeposit(address,uint256,uint256)",
+      "fee_percentage": 0.01,
+      "max_time_window_seconds": 7200,
+      "is_active": true
+    }
+  ]
+}
