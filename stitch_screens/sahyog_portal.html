@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-dim":"#dbdad6","primary-fixed":"#d1e8d9","primary-container":"#2e4237","secondary-fixed":"#ffdad3","primary-fixed-dim":"#b5ccbd","surface-variant":"#e3e2df","on-secondary-fixed-variant":"#8c1800","on-primary":"#ffffff","on-secondary-container":"#5c0c00","secondary-fixed-dim":"#ffb4a4","on-primary-fixed":"#0c1f16","on-tertiary-container":"#c5a0a0","surface-tint":"#4e6357","surface":"#faf9f5","on-tertiary-fixed":"#2b1516","outline":"#737874","tertiary-container":"#523737","secondary-container":"#fd5e3c","on-error-container":"#93000a","on-tertiary-fixed-variant":"#5c403f","inverse-primary":"#b5ccbd","error":"#ba1a1a","on-primary-container":"#98aea0","surface-container":"#efeeea","on-primary-fixed-variant":"#374b40","surface-container-low":"#f4f4f0","on-background":"#1b1c1a","on-error":"#ffffff","tertiary-fixed":"#ffdad9","tertiary-fixed-dim":"#e4bdbd","on-surface-variant":"#424844","on-secondary":"#ffffff","surface-container-lowest":"#ffffff","error-container":"#ffdad6","background":"#faf9f5","secondary":"#b32a0b","outline-variant":"#c2c8c2","inverse-surface":"#2f312e","surface-container-highest":"#e3e2df","on-tertiary":"#ffffff","surface-bright":"#faf9f5","surface-container-high":"#e9e8e4","inverse-on-surface":"#f2f1ed","primary":"#182c22","on-secondary-fixed":"#3d0600","on-surface":"#1b1c1a","tertiary":"#3a2222"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"gutter-mobile":"0.75rem","margin":"2.5rem","gutter":"1.5rem","space-lg":"1.5rem","margin-mobile":"1rem","space-xs":"0.25rem","space-xl":"2.5rem","space-sm":"0.5rem","space-md":"1rem"},fontFamily:{"body-md":["Inter"],"body-sm":["Inter"],"headline-sm":["Playfair Display"],"display-hero":["Playfair Display"],"data-metric":["Playfair Display"],"headline-md":["Playfair Display"],"label-caps":["Inter"],"label-mono":["JetBrains Mono"],"headline-lg":["Playfair Display"],"title-editorial":["Playfair Display"],"headline-lg-mobile":["Playfair Display"],"body-lg":["Inter"]},fontSize:{"body-md":["13px",{"lineHeight":"20px","letterSpacing":"-0.005em","fontWeight":"400"}],"body-sm":["11px",{"lineHeight":"16px","letterSpacing":"0em","fontWeight":"400"}],"headline-sm":["20px",{"lineHeight":"26px","letterSpacing":"0em","fontWeight":"500"}],"display-hero":["56px",{"lineHeight":"60px","letterSpacing":"-0.03em","fontWeight":"600"}],"data-metric":["32px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-md":["28px",{"lineHeight":"34px","letterSpacing":"-0.01em","fontWeight":"500"}],"label-caps":["10px",{"lineHeight":"14px","letterSpacing":"0.12em","fontWeight":"600"}],"label-mono":["12px",{"lineHeight":"16px","letterSpacing":"-0.02em","fontWeight":"500"}],"headline-lg":["40px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"600"}],"title-editorial":["16px",{"lineHeight":"22px","letterSpacing":"0.01em","fontWeight":"600"}],"headline-lg-mobile":["28px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["15px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><div class="fixed top-0 left-0 right-0 z-50 flex items-center justify-center h-7 bg-secondary text-on-secondary font-label-mono text-body-sm tracking-wider px-gutter border-b border-on-secondary/20 shadow-none"><span class="uppercase font-semibold tracking-widest text-[10px]">SYNTHETIC DATA — DEMONSTRATION ENVIRONMENT | NO DEMO ADDRESS, TRANSACTION HASH, VASP OR LABEL CORRESPONDS TO A REAL ENTITY.</span></div><header class="fixed top-7 left-0 right-0 z-40 h-16 bg-primary-container text-on-primary border-b border-outline/30 px-gutter"><div class="h-full w-full flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md shrink-0 w-72"><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-surface">DHANRASHI</span><span class="px-1.5 py-0.5 bg-secondary text-on-secondary font-label-mono text-[9px] uppercase tracking-widest font-semibold">VASP-TRACE</span></div><span class="font-label-caps text-label-caps text-on-primary-container tracking-widest uppercase">BLOCKCHAIN INTELLIGENCE (SIH26182)</span></div></div><div class="flex-1 max-w-2xl"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-on-primary-container text-[18px]">search</span><input class="w-full bg-primary/70 text-surface placeholder-on-primary-container/60 font-label-mono text-body-sm pl-10 pr-4 py-2 border border-outline/40 focus:border-surface focus:outline-none transition-colors uppercase" placeholder="SEARCH CASES, WALLETS (0X...), TRANSACTION HASHES (0X...)" type="text"/></div></div><div class="flex items-center gap-space-md shrink-0"><div class="hidden xl:flex items-center gap-1.5 px-2 py-1 bg-primary/60 border border-outline/30"><span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span><span class="font-label-mono text-[10px] text-surface font-medium uppercase tracking-wider">DEMO ENVIRONMENT</span></div><div class="hidden lg:flex items-center border border-outline/40 bg-primary/40"><button class="px-2.5 py-1 font-label-caps text-label-caps text-surface bg-primary font-bold uppercase transition-colors" type="button">ANALYST</button><span class="text-outline/40">|</span><button class="px-2.5 py-1 font-label-caps text-label-caps text-on-primary-container hover:text-surface uppercase transition-colors" type="button">SUPERVISOR</button></div><div class="hidden 2xl:flex items-center gap-1 px-2 py-1 border border-outline/30 text-on-primary-container"><span class="material-symbols-outlined text-[14px]">verified_user</span><span class="font-label-mono text-[10px] uppercase tracking-wider text-surface">SECURE // AUDITED</span></div><button class="relative p-1.5 text-on-primary-container hover:text-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-secondary"></span></button><div class="flex items-center gap-space-sm pl-2 border-l border-outline/30"><div class="text-right hidden sm:block"><div class="font-label-caps text-label-caps text-surface font-semibold uppercase tracking-wider">Insp. V. Sharma</div><div class="font-label-mono text-[9px] text-on-primary-container uppercase tracking-tight">FIU-IND Lead</div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><aside class="fixed left-0 top-23 bottom-0 w-72 bg-primary-container text-on-primary z-30 flex flex-col border-r border-outline/30 overflow-y-auto"><div class="px-space-md py-space-sm border-b border-outline/20"><span class="font-label-caps text-label-caps text-on-primary-container uppercase tracking-widest font-semibold">PRIMARY INTELLIGENCE</span></div><nav class="flex flex-col py-1" data-active-classes="bg-secondary text-on-secondary font-semibold border-l-4 border-surface"><a class="flex items-center justify-between px-space-md py-2.5 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="overview-dashboard" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">grid_view</span><span>Overview / Dashboard</span></span><span class="font-label-mono text-[9px] text-on-primary-container/80">01</span></a><a class="flex items-center justify-between px-space-md py-2.5 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="demo-cases-gallery" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">folder_special</span><span>Demo Cases Gallery</span></span><span class="font-label-mono text-[9px] text-on-primary-container/80">02</span></a><a class="flex items-center justify-between px-space-md py-2.5 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="investigation-workbench" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">account_tree</span><span>Investigation Workbench</span></span><span class="font-label-mono text-[9px] text-on-primary-container/80">03</span></a><a class="flex items-center justify-between px-space-md py-2.5 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="vasp-intelligence-registry" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">assured_workload</span><span>VASP Intelligence Registry</span></span><span class="font-label-mono text-[9px] text-on-primary-container/80">04</span></a><a class="flex items-center justify-between px-space-md py-2.5 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="evidence-ledger" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">receipt_long</span><span>Evidence Ledger</span></span><span class="font-label-mono text-[9px] text-on-primary-container/80">05</span></a><a class="flex items-center justify-between px-space-md py-2.5 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="reports-verification" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">assignment_turned_in</span><span>Reports &amp; Verification</span></span><span class="font-label-mono text-[9px] text-on-primary-container/80">06</span></a><a aria-current="page" class="flex items-center justify-between px-space-md py-2.5 tracking-wider uppercase transition-colors bg-secondary text-on-secondary font-semibold border-l-4 border-surface" data-path="sahyog-portal" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">hub</span><span>SAHYOG Portal</span></span><span class="px-1.5 py-0.2 bg-tertiary text-on-tertiary font-label-mono text-[9px] uppercase">MOCK</span></a><a class="flex items-center justify-between px-space-md py-2.5 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="audit-trail" href="#"><span class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[18px]">history_edu</span><span>Audit Trail</span></span><span class="font-label-mono text-[9px] text-on-primary-container/80">08</span></a></nav><div class="mt-space-sm px-space-md py-space-sm border-t border-b border-outline/20"><span class="font-label-caps text-label-caps text-on-primary-container uppercase tracking-widest font-semibold">ADMINISTRATION &amp; SYSTEM</span></div><nav class="flex flex-col py-1" data-active-classes="bg-secondary text-on-secondary font-semibold border-l-4 border-surface"><a class="flex items-center gap-space-sm px-space-md py-2 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="provider-health" href="#"><span class="material-symbols-outlined text-[18px]">monitor_heart</span><span>Provider Health</span></a><a class="flex items-center gap-space-sm px-space-md py-2 text-on-primary-container hover:bg-primary hover:text-surface font-label-caps text-label-caps tracking-wider uppercase transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[18px]">tune</span><span>Settings</span></a></nav><div class="mt-auto p-space-md bg-primary/80 border-t border-outline/30 flex flex-col gap-space-xs"><div class="flex items-center justify-between"><span class="font-label-caps text-[9px] text-on-primary-container uppercase tracking-widest">SYSTEM CORE</span><span class="flex items-center gap-1 font-label-mono text-[9px] text-surface"><span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>4 CHAINS</span></div><div class="font-label-mono text-[10px] text-surface font-semibold tracking-tight">ALL ENGINES OPERATIONAL</div><div class="pt-space-xs border-t border-outline/20 flex items-center justify-between text-on-primary-container font-label-mono text-[9px]"><span>ATT-v1.0</span><span>SNAP-00182</span></div></div></aside><div class="pl-72"><main class="w-full pt-23 bg-surface min-h-screen"><div class="w-full max-w-[1600px] mx-auto p-gutter"><div class="flex flex-col w-full">
+<!-- REGULATORY SOVEREIGN BANNER -->
+<div class="w-full bg-secondary-container text-on-secondary-container px-gutter py-2 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px]">gavel</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest font-semibold">
+        MOCK — NOT TRANSMITTED TO ANY AUTHORITY | DEMONSTRATION OF INTER-AGENCY COOPERATION FRAMEWORK
+      </span>
+</div>
+<div class="hidden md:flex items-center gap-space-md">
+<span class="font-label-mono text-body-sm uppercase tracking-wider">PIPELINE VERIFICATION: ACTIVE // STRICT CONFORMANCE</span>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+</div>
+<!-- EDITORIAL MASTHEAD & PRIMARY ACTIONS -->
+<div class="w-full bg-surface-container-low p-gutter shadow-sm mt-space-sm">
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md">
+<div class="max-w-4xl space-y-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-caps text-label-caps text-secondary font-bold tracking-widest uppercase">SECTION 91 CrPC // SECTION 69 IT ACT</span>
+<span class="text-outline-variant font-label-mono text-body-sm">|</span>
+<span class="font-label-mono text-body-sm text-on-surface-variant uppercase">REGULATION-REF // 2026-DHANRASHI-LEAD</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">
+          SAHYOG PORTAL // LAW ENFORCEMENT &amp; VASP DATA DISPATCH
+        </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl">
+          Formal request generation and cryptographic chain dispatch for cryptocurrency transaction freeze, custodial account isolation, and mandatory KYC disclosure.
+        </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm shrink-0">
+<button class="px-space-md py-2.5 bg-secondary text-on-secondary font-label-caps text-label-caps uppercase font-bold tracking-wider hover:bg-primary transition-colors flex items-center gap-1.5 shadow-sm" id="btnNewRequest">
+<span class="material-symbols-outlined text-[16px]">add_task</span>
+<span>+ NEW SAHYOG REQUEST</span>
+</button>
+<button class="px-space-md py-2.5 bg-surface-container-highest text-primary font-label-caps text-label-caps uppercase font-bold tracking-wider hover:bg-primary-container hover:text-on-primary transition-colors flex items-center gap-1.5 shadow-sm" id="btnVerifyAudit">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>VERIFY SHA-256 AUDIT TRAIL</span>
+</button>
+</div>
+</div>
+</div>
+<!-- WORKFLOW LIFECYCLE & SEPARATION OF DUTIES STRIP -->
+<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-space-md mt-space-md">
+<!-- LIFECYCLE STAGES -->
+<div class="lg:col-span-8 bg-surface-container-lowest p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-widest font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">linear_scale</span>
+          WORKFLOW DISPATCH PIPELINE (SOVEREIGN CHAIN OF CUSTODY)
+        </span>
+<span class="font-label-mono text-body-sm text-on-surface-variant">STAGE 03 / 05 ACTIVE</span>
+</div>
+<!-- PIPELINE STEPPER -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-space-xs mt-space-sm">
+<!-- 01 DRAFT -->
+<div class="bg-surface-container p-space-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono text-body-sm text-on-surface-variant">01</span>
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+</div>
+<div class="mt-2">
+<div class="font-label-caps text-label-caps uppercase font-bold text-primary">DRAFT</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant truncate">Investigator (Filed)</div>
+</div>
+</div>
+<!-- 02 REVIEW -->
+<div class="bg-surface-container p-space-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono text-body-sm text-on-surface-variant">02</span>
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+</div>
+<div class="mt-2">
+<div class="font-label-caps text-label-caps uppercase font-bold text-primary">REVIEW</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant truncate">Sr. Analyst Passed</div>
+</div>
+</div>
+<!-- 03 SUPERVISOR APPROVAL -->
+<div class="bg-secondary text-on-secondary p-space-sm flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-mono text-body-sm text-on-secondary">03</span>
+<span class="material-symbols-outlined text-[16px] text-surface-bright animate-pulse">pending</span>
+</div>
+<div class="mt-2">
+<div class="font-label-caps text-label-caps uppercase font-bold text-surface-bright">SUPERVISOR</div>
+<div class="font-label-mono text-body-sm text-surface-bright/80 truncate">Digital Sign-off Req.</div>
+</div>
+</div>
+<!-- 04 SUBMITTED -->
+<div class="bg-surface-container-low p-space-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono text-body-sm text-outline">04</span>
+<span class="material-symbols-outlined text-[16px] text-outline">radio_button_unchecked</span>
+</div>
+<div class="mt-2">
+<div class="font-label-caps text-label-caps uppercase font-bold text-on-surface-variant">SUBMITTED</div>
+<div class="font-label-mono text-body-sm text-outline truncate">VASP Node Queue</div>
+</div>
+</div>
+<!-- 05 ACKNOWLEDGED -->
+<div class="bg-surface-container-low p-space-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono text-body-sm text-outline">05</span>
+<span class="material-symbols-outlined text-[16px] text-outline">radio_button_unchecked</span>
+</div>
+<div class="mt-2">
+<div class="font-label-caps text-label-caps uppercase font-bold text-on-surface-variant">ACKNOWLEDGED</div>
+<div class="font-label-mono text-body-sm text-outline truncate">Custody Locked</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SEPARATION OF DUTIES NOTICE -->
+<div class="lg:col-span-4 bg-tertiary-container text-on-tertiary p-space-md shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-xs text-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">security</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest font-bold">SEPARATION OF DUTIES MANDATE</span>
+</div>
+<p class="font-body-md text-body-md text-surface-container-low mt-space-sm leading-relaxed">
+<strong>Inspector V. Sharma (Author)</strong> cannot authorize legal dispatch directly under Rule 7(a). 
+          Requires multi-party cryptographically anchored sign-off from <strong>Superintendent / Authorized Supervisory Officer</strong> before push to VASP peer nodes.
+        </p>
+</div>
+<div class="pt-space-sm flex items-center justify-between text-surface-dim font-label-mono text-body-sm">
+<span>GATEWAY: FIU-IND-PROV-401</span>
+<span class="bg-tertiary px-2 py-0.5 text-on-tertiary text-label-caps">LOCKED STATE</span>
+</div>
+</div>
+</div>
+<!-- MAIN EDITORIAL SPLIT WORKBENCH -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-md mt-space-md">
+<!-- LEFT 7 COLUMNS: ACTIVE SAHYOG REQUESTS REPOSITORY -->
+<div class="xl:col-span-7 flex flex-col gap-space-md">
+<!-- TABLE CARD -->
+<div class="bg-surface-container-lowest shadow-sm flex flex-col">
+<!-- HEADER -->
+<div class="p-space-md bg-surface-container flex items-center justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest font-bold">LEDGER INDEX // 08-SAHYOG</span>
+<h2 class="font-headline-sm text-headline-sm text-primary">Active Legal Dispatch Requests</h2>
+</div>
+<div class="flex items-center gap-space-xs font-label-mono text-body-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span>3 RECORDED DOSSIERS</span>
+</div>
+</div>
+<!-- TABLE FILTERS / CONTROLS -->
+<div class="px-space-md py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">FILTER BY STATUS:</span>
+<button class="px-2 py-1 bg-primary text-on-primary font-label-caps text-label-caps uppercase">ALL (3)</button>
+<button class="px-2 py-1 bg-surface-variant text-on-surface font-label-caps text-label-caps uppercase hover:bg-surface-dim">PENDING (1)</button>
+<button class="px-2 py-1 bg-surface-variant text-on-surface font-label-caps text-label-caps uppercase hover:bg-surface-dim">VERIFIED (1)</button>
+</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">
+            AUTONOMOUS AUDIT SYNC: <strong class="text-primary">00:03:42</strong>
+</div>
+</div>
+<!-- DATA TABLE -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high text-on-surface">
+<th class="py-2.5 px-3 font-label-caps text-label-caps uppercase tracking-wider">Request ID</th>
+<th class="py-2.5 px-3 font-label-caps text-label-caps uppercase tracking-wider">Target VASP</th>
+<th class="py-2.5 px-3 font-label-caps text-label-caps uppercase tracking-wider">Scope / Order</th>
+<th class="py-2.5 px-3 font-label-caps text-label-caps uppercase tracking-wider">Report &amp; SHA-256</th>
+<th class="py-2.5 px-3 font-label-caps text-label-caps uppercase tracking-wider">Status</th>
+<th class="py-2.5 px-3 font-label-caps text-label-caps uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md divide-y-0">
+<!-- ROW 1 (ACTIVE SELECTION) -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container cursor-pointer transition-colors" id="row-41" onclick="selectRequest('41')">
+<td class="py-3 px-3 align-top">
+<div class="font-label-mono text-body-sm font-bold text-primary">SYG-2026-0041</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">CASE-02 (Short Path)</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="font-body-md text-body-md font-bold text-on-surface">VASP ALPHA</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">Registered Node IND</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-block px-1.5 py-0.5 bg-secondary text-on-secondary font-label-caps text-label-caps uppercase font-bold tracking-tight">
+                    EMERGENCY FREEZE &amp; KYC
+                  </span>
+<div class="font-label-mono text-body-sm text-secondary-container mt-1">CrPC Sec. 91 Warrant</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="font-label-mono text-body-sm text-primary font-bold">REP-2026-02-V1</div>
+<div class="font-label-mono text-body-sm text-primary-fixed-dim bg-primary-container px-1 py-0.5 inline-flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[12px]">verified</span>
+<span>e8a9...b401</span>
+</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-ping"></span>
+<span class="font-label-caps text-label-caps text-secondary uppercase font-bold">PENDING SUPERVISOR</span>
+</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant mt-0.5">Insp. V. Sharma</div>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<button class="px-2.5 py-1.5 bg-primary text-on-primary font-label-caps text-label-caps uppercase font-bold tracking-wider hover:bg-secondary transition-colors">
+                    REVIEW &amp; SIGN
+                  </button>
+</td>
+</tr>
+<!-- ROW 2 -->
+<tr class="bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors" id="row-39" onclick="selectRequest('39')">
+<td class="py-3 px-3 align-top">
+<div class="font-label-mono text-body-sm font-bold text-primary">SYG-2026-0039</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">CASE-01 (Clean Deposit)</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="font-body-md text-body-md font-bold text-on-surface">VASP KAPPA</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">FIU Certified VASP</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-block px-1.5 py-0.5 bg-surface-variant text-on-surface font-label-caps text-label-caps uppercase font-semibold">
+                    KYC IDENTITY DISCLOSURE
+                  </span>
+<div class="font-label-mono text-body-sm text-on-surface-variant mt-1">IT Act Sec. 69 Order</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="font-label-mono text-body-sm text-primary font-bold">REP-2026-01-FINAL</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant bg-surface-container-high px-1 py-0.5 inline-flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[12px]">check</span>
+<span>3b71...cc92</span>
+</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-fixed"></span>
+<span class="font-label-caps text-label-caps text-primary uppercase font-bold">ACKNOWLEDGED VASP</span>
+</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant mt-0.5">DySP R. Verma</div>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<button class="px-2.5 py-1.5 bg-surface-container-highest text-primary font-label-caps text-label-caps uppercase font-bold tracking-wider hover:bg-primary hover:text-on-primary transition-colors">
+                    VIEW DISPATCH
+                  </button>
+</td>
+</tr>
+<!-- ROW 3 -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container cursor-pointer transition-colors" id="row-38" onclick="selectRequest('38')">
+<td class="py-3 px-3 align-top">
+<div class="font-label-mono text-body-sm font-bold text-primary">SYG-2026-0038</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">CASE-04 (Peel Chain Mixer)</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="font-body-md text-body-md font-bold text-on-surface">VASP DELTA</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">Foreign Jurisdiction Node</div>
+</td>
+<td class="py-3 px-3 align-top">
+<span class="inline-block px-1.5 py-0.5 bg-surface-variant text-on-surface font-label-caps text-label-caps uppercase font-semibold">
+                    ASSET TRACE &amp; HOLD
+                  </span>
+<div class="font-label-mono text-body-sm text-on-surface-variant mt-1">Cross-Border Directive</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="font-label-mono text-body-sm text-primary font-bold">REP-2026-04-V2</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant bg-surface-container-high px-1 py-0.5 inline-flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[12px]">check</span>
+<span>9a11...02fc</span>
+</div>
+</td>
+<td class="py-3 px-3 align-top">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-label-caps text-label-caps text-error uppercase font-bold">REJECTED (EVIDENCE)</span>
+</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant mt-0.5">Insp. V. Sharma</div>
+</td>
+<td class="py-3 px-3 align-top text-right">
+<button class="px-2.5 py-1.5 bg-surface-container text-secondary font-label-caps text-label-caps uppercase font-bold tracking-wider hover:bg-secondary hover:text-on-secondary transition-colors">
+                    REVISE EVIDENCE
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- INTER-AGENCY COOPERATION TELEMETRY & MERKLE VISUAL -->
+<div class="bg-surface-container-low p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-space-sm">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest font-bold">TELEMETRY &amp; VASP PEERING NODE STATUS</span>
+<div class="font-headline-sm text-headline-sm text-primary">Cryptographic Verification Cluster</div>
+</div>
+<span class="bg-primary text-on-primary font-label-mono text-body-sm px-2 py-0.5 uppercase">4 PEERS LINKED</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm mt-space-sm">
+<div class="bg-surface-container-lowest p-space-sm shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">SIGNATURE PROTOCOL</span>
+<div class="font-data-metric text-headline-sm text-primary my-1">Ed25519-Gov</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">PKCS#11 FIPS-140-3 Hardware Token</div>
+</div>
+<div class="bg-surface-container-lowest p-space-sm shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">DISPATCH LATENCY</span>
+<div class="font-data-metric text-headline-sm text-secondary my-1">142 ms</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">Encrypted Direct TLS 1.3 Channel</div>
+</div>
+<div class="bg-surface-container-lowest p-space-sm shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">EVIDENCE IMMUTABILITY</span>
+<div class="font-data-metric text-headline-sm text-primary my-1">100.0%</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">Dual-State Merkle Tree Anchor</div>
+</div>
+</div>
+<!-- FORENSIC EVIDENCE DISPATCH ARCHITECTURE SVG -->
+<div class="bg-surface-container-lowest p-space-md mt-space-sm shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-caps text-label-caps text-primary uppercase font-bold">EVIDENTIARY MERKLE PROOF TOPOLOGY</span>
+<span class="font-label-mono text-body-sm text-on-surface-variant">ROOT: 0x93FA...CE88</span>
+</div>
+<div class="w-full flex items-center justify-center py-2">
+<svg class="w-full h-24 text-primary" fill="none" viewbox="0 0 600 80" xmlns="http://www.w3.org/2000/svg">
+<!-- Tree Lines -->
+<path d="M300 15 L150 45 M300 15 L450 45" stroke="currentColor" stroke-dasharray="2 2" stroke-width="1.5"></path>
+<path d="M150 45 L80 70 M150 45 L220 70" stroke="currentColor" stroke-width="1.5"></path>
+<path d="M450 45 L380 70 M450 45 L520 70" stroke="currentColor" stroke-width="1.5"></path>
+<!-- Root Node -->
+<rect fill="#182c22" height="20" width="100" x="250" y="5"></rect>
+<text fill="#ffffff" font-family="JetBrains Mono" font-size="9" font-weight="bold" text-anchor="middle" x="300" y="19">MERKLE ROOT</text>
+<!-- Level 1 Nodes -->
+<rect fill="#2e4237" height="20" width="90" x="105" y="35"></rect>
+<text fill="#ffffff" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="150" y="49">H(TX-LEAF 1-3)</text>
+<rect fill="#2e4237" height="20" width="90" x="405" y="35"></rect>
+<text fill="#ffffff" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="450" y="49">H(RPC-LEAF 4-6)</text>
+<!-- Leaf Badges -->
+<rect fill="#efeeea" height="16" stroke="#182c22" stroke-width="0.5" width="70" x="45" y="62"></rect>
+<text fill="#182c22" font-family="JetBrains Mono" font-size="7" text-anchor="middle" x="80" y="73">TX_HASH_01</text>
+<rect fill="#efeeea" height="16" stroke="#182c22" stroke-width="0.5" width="70" x="185" y="62"></rect>
+<text fill="#182c22" font-family="JetBrains Mono" font-size="7" text-anchor="middle" x="220" y="73">BLOCK_HDR</text>
+<rect fill="#efeeea" height="16" stroke="#182c22" stroke-width="0.5" width="70" x="345" y="62"></rect>
+<text fill="#182c22" font-family="JetBrains Mono" font-size="7" text-anchor="middle" x="380" y="73">RECEIPT_SIG</text>
+<rect fill="#efeeea" height="16" stroke="#182c22" stroke-width="0.5" width="70" x="485" y="62"></rect>
+<text fill="#182c22" font-family="JetBrains Mono" font-size="7" text-anchor="middle" x="520" y="73">KYC_MATCH</text>
+</svg>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT 5 COLUMNS: FORMAL REQUEST PREVIEW & EVIDENCE PACKAGE INSPECTOR -->
+<div class="xl:col-span-5 flex flex-col gap-space-md">
+<!-- EXECUTIVE DISPATCH DOSSIER CARD -->
+<div class="bg-surface-container-lowest shadow-md flex flex-col">
+<!-- CARD HEADER STRIP -->
+<div class="bg-primary text-on-primary p-space-md flex items-center justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-primary-fixed uppercase tracking-widest font-bold">SOVEREIGN MEMORANDUM // EVIDENTIARY DOSSIER</span>
+<div class="font-headline-sm text-headline-sm text-surface font-semibold tracking-tight">SYG-2026-0041</div>
+</div>
+<span class="bg-secondary text-on-secondary px-2 py-0.5 font-label-mono text-body-sm uppercase font-semibold">URGENT FREEZE</span>
+</div>
+<!-- DOSSIER BODY (ARCHIVAL LEGAL STYLE) -->
+<div class="p-space-md space-y-space-md bg-surface-bright">
+<!-- OFFICIAL SEAL & MEMO HEADING -->
+<div class="bg-surface-container-low p-space-sm flex items-start gap-space-sm">
+<div class="w-10 h-10 bg-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-surface text-[22px]">policy</span>
+</div>
+<div class="space-y-0.5">
+<div class="font-label-caps text-label-caps text-primary uppercase font-bold tracking-wider">OFFICE OF CYBER FORENSICS &amp; ASSET TRACE</div>
+<div class="font-body-md text-body-md text-on-surface font-semibold">FORMAL CRYPTOGRAPHIC DIRECTIVE UNDER SEC 91 CrPC</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">SERIAL: DHANRASHI/VASP-ALPHA/FREEZE-0041/2026</div>
+</div>
+</div>
+<!-- KEY ATTRIBUTES TABLE -->
+<div class="bg-surface-container-lowest p-space-sm shadow-sm space-y-space-xs font-body-md">
+<div class="flex items-center justify-between py-1 bg-surface-container px-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase font-semibold">Target Wallet</span>
+<div class="flex items-center gap-1 font-label-mono text-body-sm font-bold text-primary">
+<span>0x71C8366420A8...89A2</span>
+<button class="text-on-surface-variant hover:text-primary" title="Copy Address"><span class="material-symbols-outlined text-[14px]">content_copy</span></button>
+</div>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase font-semibold">Identified VASP</span>
+<div class="text-right">
+<span class="font-body-md text-body-md font-bold text-primary">VASP ALPHA</span>
+<span class="font-label-mono text-body-sm text-on-surface-variant block">(Attribution: 87.4/100 | Flow: 88.0%)</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container px-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase font-semibold">Transit Risk Velocity</span>
+<div class="flex items-center gap-2">
+<span class="font-label-mono text-body-sm font-bold text-secondary">72 / 100 [HIGH RISK]</span>
+<span class="w-16 h-2 bg-surface-variant relative overflow-hidden">
+<span class="absolute left-0 top-0 bottom-0 bg-secondary" style="width: 72%;"></span>
+</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase font-semibold">Provenance Rigor</span>
+<div class="flex items-center gap-1">
+<span class="bg-primary text-on-primary font-label-caps text-label-caps px-1.5 py-0.5">OBSERVED</span>
+<span class="bg-surface-variant text-on-surface font-label-caps text-label-caps px-1.5 py-0.5">THIRD-PARTY</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container px-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase font-semibold">Cluster Identifier</span>
+<span class="font-label-mono text-body-sm text-on-surface">#VASP-ALP-09 (Hot-Wallet Sweeper)</span>
+</div>
+</div>
+<!-- MERKLE-VERIFIED ATTACHMENTS (6 ITEMS) -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-primary uppercase font-bold tracking-wider">
+                ATTACHED EVIDENTIARY RECORDS (6 ITEMS)
+              </span>
+<span class="font-label-mono text-body-sm text-secondary-container font-semibold">MERKLE ANCHORED</span>
+</div>
+<div class="bg-surface-container-low p-space-sm space-y-1 font-label-mono text-body-sm">
+<div class="flex items-center justify-between text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">receipt_long</span>
+<span>01_PRIMARY_HEURISTIC_TRACE.PDF</span>
+</span>
+<span class="text-on-surface-variant">SHA256: d8e1...4a09</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">token</span>
+<span>02_RAW_RPC_RECEIPTS_ETH_MAINNET.JSON</span>
+</span>
+<span class="text-on-surface-variant">SHA256: 9b24...f011</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">account_tree</span>
+<span>03_MULTI_HOP_FLOW_GRAPH_SNAPSHOT.PNG</span>
+</span>
+<span class="text-on-surface-variant">SHA256: 77a0...88ec</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">fingerprint</span>
+<span>04_INVESTIGATOR_AUDIT_LOG_SIG.BIN</span>
+</span>
+<span class="text-on-surface-variant">SHA256: e8a9...b401</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">database</span>
+<span>05_VASP_ALPHA_HOTWALLET_REGISTRY.CSV</span>
+</span>
+<span class="text-on-surface-variant">SHA256: c314...e299</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">description</span>
+<span>06_CRPC_SEC91_REQUISITION_ORDER.DOC</span>
+</span>
+<span class="text-on-surface-variant">SHA256: f198...77ba</span>
+</div>
+</div>
+</div>
+<!-- STATUTORY & LEGAL DISCLAIMER -->
+<div class="bg-surface-container p-space-sm text-on-surface-variant">
+<div class="flex items-center gap-1 text-secondary font-label-caps text-label-caps uppercase font-bold">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>STATUTORY NOTICE OF PROBABILISTIC HEURISTICS</span>
+</div>
+<p class="font-body-sm text-body-sm mt-1 leading-normal italic">
+              "Attribution represents an investigative lead based on probabilistic multi-factor graph heuristics and on-chain transactional velocity. It does not constitute conclusive evidence of guilt or ownership until independently corroborated by depository KYC disclosure from the recipient institution."
+            </p>
+</div>
+<!-- SIGN-OFF METADATA STRIP -->
+<div class="bg-surface-container-high p-space-sm flex items-center justify-between font-label-mono text-body-sm">
+<div>
+<span class="text-on-surface-variant block text-label-caps">ORIGINATING INVESTIGATOR</span>
+<span class="font-bold text-primary">Insp. V. Sharma (ID: FIU-7729)</span>
+</div>
+<div class="text-right">
+<span class="text-on-surface-variant block text-label-caps">REQUIRED SIGNER</span>
+<span class="font-bold text-secondary">Superintendent / Jt. Director</span>
+</div>
+</div>
+<!-- ACTION CONTROLS & DISPATCH OPERATIONAL TRIGGERS -->
+<div class="pt-space-xs space-y-space-xs">
+<button class="w-full py-3 bg-secondary text-on-secondary font-label-caps text-label-caps font-bold uppercase tracking-widest hover:bg-primary transition-colors flex items-center justify-center gap-space-xs shadow-md" id="btnSignGov">
+<span class="material-symbols-outlined text-[18px]">key</span>
+<span>SIGN WITH PIV / GOV CRYPTO-TOKEN</span>
+</button>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-xs">
+<button class="py-2.5 bg-surface-container-highest text-primary font-label-caps text-label-caps font-bold uppercase tracking-wider hover:bg-primary-container hover:text-on-primary transition-colors flex items-center justify-center gap-1.5 shadow-sm" id="btnDownloadPkg">
+<span class="material-symbols-outlined text-[16px]">folder_zip</span>
+<span>DOWNLOAD EVIDENCE (.ZIP)</span>
+</button>
+<button class="py-2.5 bg-surface-container-highest text-error font-label-caps text-label-caps font-bold uppercase tracking-wider hover:bg-error hover:text-on-error transition-colors flex items-center justify-center gap-1.5 shadow-sm" id="btnRejectAudit">
+<span class="material-symbols-outlined text-[16px]">cancel</span>
+<span>REJECT WITH COMMENT</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- AUDIT INTEGRITY BADGE -->
+<div class="bg-surface-container-high p-space-md shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[28px]">shield_with_heart</span>
+<div>
+<div class="font-headline-sm text-title-editorial text-primary font-bold">CHAIN OF CUSTODY INTEGRITY</div>
+<div class="font-label-mono text-body-sm text-on-surface-variant">IMMUTABLE LOG RECORD #CC-2026-99201</div>
+</div>
+</div>
+<span class="bg-primary text-on-primary font-label-mono text-body-sm px-2.5 py-1 uppercase font-bold tracking-wider">VERIFIED VALID</span>
+</div>
+</div>
+</div>
+<!-- INTERACTIVE MODAL: PIV / GOV CRYPTO SIGNATURE DIALOG -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-primary/60 backdrop-blur-sm hidden" id="signModal">
+<div class="bg-surface-container-lowest w-full max-w-lg shadow-xl p-space-lg relative space-y-space-md">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-secondary uppercase font-bold tracking-widest">FIPS-140-3 AUTHORIZATION</span>
+<h3 class="font-headline-md text-headline-sm text-primary">Execute Sovereign Signature</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary" id="btnCloseModal">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        Insert cryptographic government PIV card or enter sovereign hardware token PIN to apply authoritative digital signature to <strong>SYG-2026-0041</strong>.
+      </p>
+<div class="bg-surface-container-low p-space-sm space-y-1 font-label-mono text-body-sm">
+<div class="flex justify-between">
+<span class="text-on-surface-variant">TARGET VASP:</span>
+<span class="font-bold text-primary">VASP ALPHA (FIU-ID: IND-09)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">DOSSIER HASH:</span>
+<span class="font-bold text-primary">e8a93947bc01...881f</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">AUTHORIZED SUPERINTENDENT:</span>
+<span class="font-bold text-primary">DySP R. Verma (TOKEN ID: 9918)</span>
+</div>
+</div>
+<div class="space-y-space-xs">
+<label class="font-label-caps text-label-caps uppercase font-bold text-primary block">HARDWARE TOKEN PIN (6 DIGITS)</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest text-primary font-label-mono text-data-metric px-space-md py-2 tracking-widest focus:outline-none focus:bg-surface-container" id="tokenPin" maxlength="6" placeholder="••••••" type="password"/>
+</div>
+</div>
+<div class="flex items-center gap-space-sm pt-space-xs">
+<button class="flex-1 py-3 bg-secondary text-on-secondary font-label-caps text-label-caps font-bold uppercase tracking-widest hover:bg-primary transition-colors" id="btnExecuteSignature">
+          CONFIRM &amp; DISPATCH TO VASP
+        </button>
+<button class="px-space-md py-3 bg-surface-container text-on-surface font-label-caps text-label-caps font-bold uppercase tracking-widest hover:bg-surface-variant transition-colors" id="btnCancelModal">
+          ABORT
+        </button>
+</div>
+</div>
+</div>
+<!-- INTERACTIVE TOAST NOTIFICATION CONTAINER -->
+<div class="fixed bottom-6 right-6 z-50 bg-primary text-on-primary p-space-md shadow-xl flex items-center gap-space-sm hidden" id="toastNotification">
+<span class="material-symbols-outlined text-[20px] text-primary-fixed">task_alt</span>
+<div>
+<div class="font-label-caps text-label-caps uppercase font-bold text-primary-fixed" id="toastTitle">OPERATION SUCCESSFUL</div>
+<div class="font-body-sm text-body-sm text-surface" id="toastMessage">Action completed with verified audit log.</div>
+</div>
+</div>
+</div>
+<script>
+  // INTERACTION CONTROLLER FOR SAHYOG PORTAL
+  function showToast(title, msg) {
+    const toast = document.getElementById('toastNotification');
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMessage').textContent = msg;
+    toast.classList.remove('hidden');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 4500);
+  }
+
+  function selectRequest(id) {
+    // Highlight table row state
+    ['41', '39', '38'].forEach(rId => {
+      const row = document.getElementById('row-' + rId);
+      if(row) {
+        if(rId === id) {
+          row.classList.add('bg-surface-variant');
+        } else {
+          row.classList.remove('bg-surface-variant');
+        }
+      }
+    });
+    showToast('DOSSIER FOCUS', 'Loaded full forensic dossier SYG-2026-00' + id + ' into verification inspector.');
+  }
+
+  // MODAL TRIGGER LOGIC
+  const signModal = document.getElementById('signModal');
+  const btnSignGov = document.getElementById('btnSignGov');
+  const btnCloseModal = document.getElementById('btnCloseModal');
+  const btnCancelModal = document.getElementById('btnCancelModal');
+  const btnExecuteSignature = document.getElementById('btnExecuteSignature');
+
+  if(btnSignGov) {
+    btnSignGov.addEventListener('click', () => {
+      signModal.classList.remove('hidden');
+    });
+  }
+
+  const hideModal = () => {
+    signModal.classList.add('hidden');
+  };
+
+  if(btnCloseModal) btnCloseModal.addEventListener('click', hideModal);
+  if(btnCancelModal) btnCancelModal.addEventListener('click', hideModal);
+
+  if(btnExecuteSignature) {
+    btnExecuteSignature.addEventListener('click', () => {
+      const pin = document.getElementById('tokenPin').value;
+      if(!pin || pin.length < 4) {
+        alert('PLEASE ENTER A VALID HARDWARE TOKEN PIN (MIN 4 DIGITS)');
+        return;
+      }
+      hideModal();
+      showToast('DISPATCH AUTHORIZED', 'Cryptographic signature generated (Ed25519). SYG-2026-0041 transmitted to VASP ALPHA endpoint.');
+    });
+  }
+
+  // DOWNLOAD AND AUDIT BUTTONS
+  const btnDownloadPkg = document.getElementById('btnDownloadPkg');
+  if(btnDownloadPkg) {
+    btnDownloadPkg.addEventListener('click', () => {
+      showToast('ARCHIVAL PACKAGE GENERATED', 'Synthesized signed ZIP (6 files, Merkle Root 0x93FA...CE88) initialized for local retention.');
+    });
+  }
+
+  const btnRejectAudit = document.getElementById('btnRejectAudit');
+  if(btnRejectAudit) {
+    btnRejectAudit.addEventListener('click', () => {
+      showToast('ACTION LOGGED', 'Audit docket updated: Request flagged for investigator evidentiary revision.');
+    });
+  }
+
+  const btnVerifyAudit = document.getElementById('btnVerifyAudit');
+  if(btnVerifyAudit) {
+    btnVerifyAudit.addEventListener('click', () => {
+      showToast('SHA-256 INTEGRITY VALIDATED', 'All 3 active dossiers matches SIH26182 chain ledger. Zero corruption detected.');
+    });
+  }
+
+  const btnNewRequest = document.getElementById('btnNewRequest');
+  if(btnNewRequest) {
+    btnNewRequest.addEventListener('click', () => {
+      showToast('NEW REQUEST PROTOCOL', 'Initiated Section 91 CrPC requisition wizard. Select target case to populate heuristic graphs.');
+    });
+  }
+</script></div></main></div></body></html>
