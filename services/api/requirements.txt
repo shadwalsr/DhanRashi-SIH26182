@@ -11,6 +11,7 @@ alembic>=1.13.1
 psycopg[binary]>=3.1.18
 psycopg2-binary>=2.9.9
 asyncpg>=0.29.0
+aiosqlite>=0.20.0
 
 redis>=5.0.4
 celery>=5.4.0

@@ -46,6 +46,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -57,6 +58,7 @@ app.add_exception_handler(HTTPException, generic_http_exception_handler)
 
 # Root level health checks (e.g. /health/live, /health/ready)
 app.include_router(health_router)
+app.include_router(health_router, prefix=settings.API_V1_PREFIX)
 
 # Versioned API routes
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
