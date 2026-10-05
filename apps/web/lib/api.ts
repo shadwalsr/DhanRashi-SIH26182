@@ -15,7 +15,34 @@ import {
   UserSession,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/**
+ * Resolves the base URL for API requests:
+ * - Server-side (Vercel functions/SSR): Reads the bound service URL from process.env.API_URL.
+ * - Client-side (Browser): Defaults to same-origin relative path ("") so Vercel rewrites (/api/...) route to the api service.
+ * - Local fallback: When running on localhost:3000 directly, falls back to http://localhost:8000.
+ */
+export function getApiBase(): string {
+  if (typeof window === "undefined") {
+    return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  }
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (window.location.hostname === "localhost" && window.location.port === "3000") {
+    return "http://localhost:8000";
+  }
+  return "";
+}
+
+function resolveUrl(endpoint: string): string {
+  const base = getApiBase();
+  if (!base) {
+    return endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  }
+  const cleanBase = base.replace(/\/+$/, "");
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${cleanBase}${cleanEndpoint}`;
+}
 
 // Pre-seeded demo user profiles for instant switching without re-authenticating
 export const DEMO_USERS: Record<UserRole, { email: string; name: string; role: UserRole }> = {
@@ -73,7 +100,8 @@ class ApiClient {
       headers["Authorization"] = `Bearer ${this.token}`;
     }
 
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const url = resolveUrl(endpoint);
+    const res = await fetch(url, {
       ...options,
       headers,
     });
@@ -100,7 +128,8 @@ class ApiClient {
     formData.append("username", demoUser.email);
     formData.append("password", "Password123!");
 
-    const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+    const loginUrl = resolveUrl("/api/v1/auth/login");
+    const res = await fetch(loginUrl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: formData.toString(),
